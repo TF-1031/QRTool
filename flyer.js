@@ -49,6 +49,7 @@
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(state.bg, 0, 0, W, H);
 
+    // White QR box
     const boxW = BOX_RATIO_W * W;
     const boxH = BOX_RATIO_H * H;
     const x = (W - boxW) / 2;
@@ -60,6 +61,7 @@
     ctx.strokeStyle = "#000";
     ctx.strokeRect(x, y, boxW, boxH);
 
+    // QR code inside the box
     const inner = Math.min(boxW, boxH) * QR_FILL_RATIO;
     const pad = (Math.min(boxW, boxH) - inner) / 2;
 
@@ -71,7 +73,7 @@
     const qrImg = await loadImage(qrDataURL);
     ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
-    // Event label at bottom center
+    // Event name at bottom center
     const fontPx = Math.round((LABEL_PT / 72) * DPI);
     ctx.font = `italic ${fontPx}px ${FONT_STACK}`;
     ctx.fillStyle = "#000";
@@ -90,7 +92,7 @@
     cnv.height = Math.round(cssH * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH); // ✅ no guides
+    await drawFlyer(ctx, cssW, cssH); // ✅ clean, no guides
   }
 
   async function savePDF() {

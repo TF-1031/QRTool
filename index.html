@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Event Flyer Generator</title>
-  <link rel="stylesheet" href="flyer.css">
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="flyer.css" />
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <h2>Event Flyer Generator</h2>
 
   <div class="row">
-    <input type="text" id="eventName" placeholder="Event" value="Event">
-    <input type="url" id="urlInput" placeholder="https://www.sparklight.com" value="https://www.sparklight.com">
-    <button class="btn" id="makeQR">Generate QR</button>
+    <input id="eventName" type="text" placeholder="Event" value="Event" />
+    <input id="urlInput"   type="url"  placeholder="https://www.sparklight.com" value="https://www.sparklight.com" />
+    <button id="makeQR" class="btn">Generate QR</button>
   </div>
 
+  <!-- Preview (one canvas renders the whole flyer) -->
   <div id="preview-stage">
-    <canvas id="previewCanvas"></canvas>
-    <div id="eventLabel">Event</div>
+    <canvas id="previewCanvas" aria-label="Flyer preview"></canvas>
   </div>
 
   <div id="actions">
-    <button class="btn" id="saveBtn">Save</button>
-    <button class="btn" id="resetBtn">Reset</button>
+    <button id="saveBtn" class="btn">Save</button>
+    <button id="resetBtn" class="btn">Reset</button>
   </div>
 
   <script src="flyer.js"></script>

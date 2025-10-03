@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Event Flyer – QR Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { --brand: #8d3b91; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; padding: 20px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f5f5f7; color: #1f1f23; text-align: center;
+  }
+
+  h2 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0; }
+  input[type="text"], input[type="url"], select {
+    padding: 10px 12px; font-size: 16px; border: 1px solid #c9c9cf; border-radius: 8px; min-width: 240px;
+  }
+  .btn {
+    background: var(--brand); color: #fff; border: 0; border-radius: 999px;
+    padding: 12px 18px; font-size: 16px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(141,59,145,.25);
+  }
+  .btn:hover { filter: brightness(.95); }
+
+  /* Preview */
+  #flyer {
+    position: relative; width: min(850px, 92vw); aspect-ratio: 8.5 / 11;
+    margin: 18px auto 14px; border: 1px solid #d9d9df; border-radius: 6px;
+    overflow: hidden; background: #fff center/cover no-repeat;
+  }
+
+  #qrWrap {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  }
+  #qrBox {
+    width: 316px; height: 316px; background: #fff; display: grid; place-items: center; pointer-events: auto;
+  }
+  #qrInner { width: 90%; height: 90%; display: grid; place-items: center; }
+  #qrPreview { width: 100%; height: 100%; display: block; }
+
+  /* Event label under the QR – smaller & thinner */
+  #eventLabel {
+    margin-top: 12px; font-size: 12px; font-weight: 400;
+    text-align: center; user-select: none;
+  }
+
+  #actions { margin-top: 6px; }
+
+  .helper { font-size: 12px; color:#555; }
+
+  details { margin: 8px auto; width: min(850px, 92vw); text-align: left; }
+  details summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
+  .uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .uploads label { display: block; font-size: 13px; margin-bottom: 4px; }
+  .uploads input[type="file"] { width: 100%; padding: 8px; background: #fff; border: 1px solid #d6d6dc; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<h2>Event Flyer Generator</h2>
+
+<div class="row">
+  <select id="bgSelect">
+    <option value="light" selected>Light Background</option>
+    <option value="dark">Dark Background</option>
+  </select>
+  <input id="eventName" type="text" placeholder="Event Name" />
+  <input id="urlInput" type="url" placeholder="https://example.com" />
+  <button class="btn" id="makeQR">Generate QR</button>
+</div>
+
+<details>
+  <summary>Load background images (recommended if this file is opened directly from your computer)</summary>
+  <div class="uploads">
+    <div>
+      <label>Light background (EVENT-QR-WHT.jpg)</label>
+      <input id="lightFile" type="file" accept="image/*" />
+    </div>
+    <div>
+      <label>Dark background (EVENT-QR-PRP.jpg)</label>
+      <input id="darkFile" type="file" accept="image/*" />
+    </div>
+  </div>
+  <div class="helper">When opened via <code>file://</code>, browsers block drawing local images into a PDF. Uploading them here converts them to safe in-memory images so Save/Print works.</div>
+</details>
+
+<!-- Preview -->
+<div id="flyer" aria-label="Flyer preview">
+  <div id="qrWrap">
+    <div>
+      <div id="qrBox">
+        <div id="qrInner"><canvas id="qrPreview"></canvas></div>
+      </div>
+      <div id="eventLabel"></div>
+    </div>
+  </div>
+</div>
+
+<div id="actions" class="row" style="display:none;">
+  <button class="btn" id="printBtn">Print</button>
+  <button class="btn" id="saveBtn">Save</button>
+  <button class="btn" id="resetBtn">Reset</button>
+</div>
+
+<!-- QR library (canvas-based, no external images) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<!-- jsPDF (PDF generation) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+(() => {
+  // --- constants & state ---
+  const DPI = 300, PAGE_W = 8.5, PAGE_H = 11;
+  const PX_W = DPI * PAGE_W, PX_H = DPI * PAGE_H;
+
+  const BOX_IN = 3.16;
+  const BOX_PX = Math.round(BOX_IN * DPI); // 948px
+  const state = {
+    theme: 'light',
+    eventName: '',
+    url: '',
+    // data URLs for backgrounds
+    bg: {
+      light: null,
+      dark: null
+    }
+  };
+
+  // Optional: if you want to hard-wire Base64 backgrounds here later:
+  const LIGHT_BG_DATA = ""; // put data URL string here if desired
+  const DARK_BG_DATA  = ""; // put data URL string here if desired
+  if (LIGHT_BG_DATA) state.bg.light = LIGHT_BG_DATA;
+  if (DARK_BG_DATA)  state.bg.dark  = DARK_BG_DATA;
+
+  // --- elements ---
+  const flyer    = document.getElementById('flyer');
+  const qrPrev   = document.getElementById('qrPreview');
+  const eventLbl = document.getElementById('eventLabel');
+
+  const bgSelect = document.getElementById('bgSelect');
+  const eventIn  = document.getElementById('eventName');
+  const urlIn    = document.getElementById('urlInput');
+  const makeQR   = document.getElementById('makeQR');
+  const saveBtn  = document.getElementById('saveBtn');
+  const printBtn = document.getElementById('printBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const lightFile = document.getElementById('lightFile');
+  const darkFile  = document.getElementById('darkFile');
+
+  // --- helpers ---
+  function sanitizeName(name) {
+    return (name || "flyer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "_");
+  }
+  function fileToDataURL(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+  function setPreviewBackground() {
+    const dataURL = state.bg[state.theme];
+    if (dataURL) flyer.style.backgroundImage = `url('${dataURL}')`;
+    else flyer.style.backgroundImage = 'none';
+    eventLbl.style.color = state.theme === 'dark' ? '#fff' : '#000';
+  }
+  function ensureBackgroundForPDF() {
+    const dataURL = state.bg[state.theme];
+    if (!dataURL) {
+      alert(`Please upload the ${state.theme === 'dark' ? 'Dark' : 'Light'} background image (use the “Load background images” section).`);
+      return null;
+    }
+    return dataURL;
+  }
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src; // data URL → safe for canvas
+    });
+  }
+
+  // --- events ---
+  bgSelect.addEventListener('change', () => {
+    state.theme = bgSelect.value;
+    setPreviewBackground();
+  });
+
+  lightFile.addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    state.bg.light = await fileToDataURL(f);
+    if (state.theme === 'light') setPreviewBackground();
+  });
+  darkFile.addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    state.bg.dark = await fileToDataURL(f);
+    if (state.theme === 'dark') setPreviewBackground();
+  });
+
+  makeQR.addEventListener('click', async () => {
+    state.eventName = eventIn.value.trim();
+    state.url = urlIn.value.trim();
+    if (!state.eventName || !state.url) { alert("Enter both Event Name and URL."); return; }
+
+    // render QR in preview canvas
+    const size = Math.min(qrPrev.width = document.getElementById('qrInner').clientWidth,
+                          qrPrev.height = document.getElementById('qrInner').clientHeight);
+    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 4 }); // margin = quiet zone
+
+    eventLbl.textContent = state.eventName;
+    setPreviewBackground();
+    document.getElementById('actions').style.display = 'flex';
+  });
+
+  // --- high-res render (300 DPI) to PDF ---
+  async function buildHiResCanvas() {
+    const bgDataURL = ensureBackgroundForPDF();
+    if (!bgDataURL) return null;
+
+    const cnv = document.createElement('canvas');
+    cnv.width = PX_W; cnv.height = PX_H;
+    const ctx = cnv.getContext('2d');
+
+    // background
+    const bg = await loadImage(bgDataURL);
+    ctx.drawImage(bg, 0, 0, PX_W, PX_H);
+
+    // white QR box centered
+    const x = Math.round((PX_W - BOX_PX) / 2);
+    const y = Math.round((PX_H - BOX_PX) / 2);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x, y, BOX_PX, BOX_PX);
+
+    // QR fills the box; built-in margin ensures white edge (no clipping)
+    const qrDataURL = await QRCode.toDataURL(state.url, { width: BOX_PX, margin: 4 });
+    const qrImg = await loadImage(qrDataURL);
+    ctx.drawImage(qrImg, x, y, BOX_PX, BOX_PX);
+
+    // event label, thinner & smaller, color by theme
+    ctx.fillStyle = state.theme === 'dark' ? "#fff" : "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    // 12px CSS at 96dpi → scale to 300dpi
+    const cssPx = 12, px300 = Math.round(cssPx * DPI / 96);
+    ctx.font = `400 ${px300}px Arial, sans-serif`;
+    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + Math.round(0.17 * px300)); // a touch of extra padding
+
+    return cnv;
+  }
+
+  async function savePDF() {
+    if (!state.eventName || !state.url) { alert("Enter both Event Name and URL."); return; }
+    const cnv = await buildHiResCanvas(); if (!cnv) return;
+    const img = cnv.toDataURL("image/jpeg", 1.0);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "in", [PAGE_W, PAGE_H]); // Letter
+    pdf.addImage(img, "JPEG", 0, 0, PAGE_W, PAGE_H);
+    pdf.save(sanitizeName(state.eventName) + ".pdf");
+  }
+
+  async function printPDF() {
+    if (!state.eventName || !state.url) { alert("Enter both Event Name and URL."); return; }
+    const cnv = await buildHiResCanvas(); if (!cnv) return;
+    const img = cnv.toDataURL("image/jpeg", 1.0);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "in", [PAGE_W, PAGE_H]);
+    pdf.addImage(img, "JPEG", 0, 0, PAGE_W, PAGE_H);
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed"; iframe.style.right = 0; iframe.style.bottom = 0;
+    iframe.style.width = 0; iframe.style.height = 0; iframe.style.border = 0;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      setTimeout(() => { iframe.contentWindow.print(); }, 150);
+    };
+    iframe.src = url;
+  }
+
+  function resetAll() { location.reload(); }
+
+  // buttons
+  saveBtn.addEventListener('click', savePDF);
+  printBtn.addEventListener('click', printPDF);
+  resetBtn.addEventListener('click', resetAll);
+
+  // initial state
+  setPreviewBackground();
+})();
+</script>
+</body>
+</html>

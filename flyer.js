@@ -82,10 +82,8 @@
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     const cssPx = 12, px300 = Math.round(cssPx * DPI / 96);
-    ctx.font = `italic 400 ${px300}px Arial, sans-serif`;
-
-    const labelOffset = Math.round(0.35 * px300);
-    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + labelOffset);
+  ctx.font = `italic 400 ${px300}px Arial, sans-serif`;
+ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + Math.round(0.17 * px300));
 
     return cnv;
   }
@@ -104,3 +102,4 @@
   saveBtn.addEventListener('click', savePDF);
   resetBtn.addEventListener('click', resetAll);
 })();
+

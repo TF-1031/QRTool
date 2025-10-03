@@ -61,7 +61,7 @@
     ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
     // Event label — fixed ~10pt at 300dpi (~40px)
-    const fontPx = Math.round((10 / 72) * DPI); // convert 10pt → px at 300dpi
+    const fontPx = Math.round((10 / 72) * DPI * 0.75); // 75% of 10pt
     const labelOffset = fontPx * 0.6;
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
@@ -129,3 +129,4 @@
     });
   })();
 })();
+

@@ -35,7 +35,7 @@
     const ctx = pctx;
     const canvas = previewCanvas;
 
-    // Match aspect ratio
+    // Reset canvas size
     canvas.width = 850;
     canvas.height = Math.round((11 / 8.5) * 850);
 
@@ -43,14 +43,14 @@
     const bg = await loadImage("EVENT-QR-WHT.jpg");
     ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-    // QR box in preview
-    const boxSize = canvas.width * 0.37; // proportional size
+    // QR box
+    const boxSize = canvas.width * 0.37;
     const x = (canvas.width - boxSize) / 2;
     const y = (canvas.height - boxSize) / 2;
     ctx.fillStyle = "#fff";
     ctx.fillRect(x, y, boxSize, boxSize);
 
-    // Draw QR
+    // QR image
     const qrDataURL = await QRCode.toDataURL(state.url, { width: boxSize * 0.8, margin: 0 });
     const qrImg = await loadImage(qrDataURL);
 
@@ -61,11 +61,11 @@
     ctx.lineWidth = 1;
     ctx.strokeRect(x + boxSize * 0.1, y + boxSize * 0.1, boxSize * 0.8, boxSize * 0.8);
 
-    // Event text under QR
+    // Event text under QR (preview only, 10pt)
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.font = "italic 10pt Effra, Segoe UI, Arial, sans-serif";
+    ctx.font = "italic 10pt Effra, 'Segoe UI', Arial, sans-serif";
     ctx.fillText(state.eventName, canvas.width / 2, y + boxSize + 5);
   }
 
@@ -89,22 +89,23 @@
     ctx.fillStyle = "#fff";
     ctx.fillRect(x, y, BOX_PX, BOX_PX);
 
+    // QR
     const qrDataURL = await QRCode.toDataURL(state.url, { width: BOX_PX * 0.8, margin: 0 });
     const qrImg = await loadImage(qrDataURL);
-
     ctx.drawImage(qrImg, x + BOX_PX * 0.1, y + BOX_PX * 0.1, BOX_PX * 0.8, BOX_PX * 0.8);
 
+    // Border
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 2;
     ctx.strokeRect(x + BOX_PX * 0.1, y + BOX_PX * 0.1, BOX_PX * 0.8, BOX_PX * 0.8);
 
-    // 8pt font scaled to 300DPI
+    // Event name in high-res (8pt scaled to 300 DPI)
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     const pxFont = Math.round(8 * DPI / 72); 
     ctx.font = `italic ${pxFont}px Effra, "Segoe UI", Arial, sans-serif`;
-    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + 5);
+    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + 15);
 
     return cnv;
   }

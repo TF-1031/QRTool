@@ -7,7 +7,6 @@
   const BOX_RATIO_H = BOX_IN / INCH_H;
   const QR_FILL_RATIO = 0.90;
 
-  const LABEL_PT = 8; // Event name font size in points
   const FONT_STACK =
     `"Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI",
      -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
@@ -74,9 +73,9 @@
     ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
     // Event name at bottom center
-    const fontPx = Math.round((LABEL_PT / 72) * DPI);
+    const fontPx = Math.round((6 / 72) * DPI);   // smaller font (6pt)
     ctx.font = `italic ${fontPx}px ${FONT_STACK}`;
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#666";                      // gray text
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     ctx.fillText(state.eventName, W / 2, H - 5);
@@ -92,7 +91,7 @@
     cnv.height = Math.round(cssH * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH); // ✅ no crosshairs
+    await drawFlyer(ctx, cssW, cssH);
   }
 
   async function savePDF() {

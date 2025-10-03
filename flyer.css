@@ -3,7 +3,10 @@
 
 body {
   margin: 0; padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI",
+               -apple-system, BlinkMacSystemFont, Roboto,
+               "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif,
+               "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   background: #f5f5f7; color: #1f1f23; text-align: center;
 }
 
@@ -41,5 +44,8 @@ input[type="text"], input[type="url"] {
 }
 
 #actions {
-  margin-top: 8px; display: flex; gap: 10px; justify-content: center;
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }

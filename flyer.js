@@ -1,26 +1,21 @@
 (() => {
-  const INCH_W = 8.5, INCH_H = 11, DPI = 300;
-  const PX_W = INCH_W * DPI, PX_H = INCH_H * DPI;
+  const DPI = 300, PAGE_W = 8.5, PAGE_H = 11;
+  const PX_W = DPI * PAGE_W, PX_H = DPI * PAGE_H;
+  const BOX_IN = 3.16, BOX_PX = Math.round(BOX_IN * DPI);
 
-  const BOX_IN = 3.16;
-  const BOX_RATIO_W = BOX_IN / INCH_W;
-  const BOX_RATIO_H = BOX_IN / INCH_H;
-  const QR_RATIO = 0.90;
+  const state = { eventName: "Event", url: "https://www.sparklight.com" };
 
-  const state = {
-    eventName: "Event",
-    url: "https://www.sparklight.com",
-    bg: null
-  };
+  const qrPrev   = document.getElementById('previewCanvas');
+  const eventLbl = document.getElementById('eventLabel');
+  const eventIn  = document.getElementById('eventName');
+  const urlIn    = document.getElementById('urlInput');
+  const makeQR   = document.getElementById('makeQR');
+  const saveBtn  = document.getElementById('saveBtn');
+  const resetBtn = document.getElementById('resetBtn');
 
-  const cnv = document.getElementById("previewCanvas");
-  const ctx = cnv.getContext("2d");
-
-  const eventIn = document.getElementById("eventName");
-  const urlIn = document.getElementById("urlInput");
-  const makeQR = document.getElementById("makeQR");
-  const saveBtn = document.getElementById("saveBtn");
-  const resetBtn = document.getElementById("resetBtn");
+  function sanitizeName(name) {
+    return (name || "flyer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "_");
+  }
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -32,106 +27,62 @@
     });
   }
 
-  async function drawFlyer(ctx, W, H, isPreview = false) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(state.bg, 0, 0, W, H);
+  makeQR.addEventListener('click', async () => {
+    state.eventName = eventIn.value.trim() || "Event";
+    state.url = urlIn.value.trim() || "https://www.sparklight.com";
 
-    const boxW = BOX_RATIO_W * W;
-    const boxH = BOX_RATIO_H * H;
-    const x = (W - boxW) / 2;
-    const y = (H - boxH) / 2;
+    const size = qrPrev.width = qrPrev.height = 300;
+    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 1, color: { dark: "#000000", light: "#FFFFFF" } });
 
-    // White QR box with black outline
+    eventLbl.textContent = state.eventName;
+    document.getElementById('actions').style.display = 'flex';
+  });
+
+  async function buildHiResCanvas() {
+    const cnv = document.createElement('canvas');
+    cnv.width = PX_W; cnv.height = PX_H;
+    const ctx = cnv.getContext('2d');
+
+    const bg = await loadImage("EVENT-QR-WHT.jpg");
+    ctx.drawImage(bg, 0, 0, PX_W, PX_H);
+
+    const x = Math.round((PX_W - BOX_PX) / 2);
+    const y = Math.round((PX_H - BOX_PX) / 2);
+
     ctx.fillStyle = "#fff";
-    ctx.fillRect(x, y, boxW, boxH);
-    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, BOX_PX, BOX_PX);
     ctx.strokeStyle = "#000";
-    ctx.strokeRect(x, y, boxW, boxH);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, BOX_PX, BOX_PX);
 
-    // QR code inside
-    const inner = boxW * QR_RATIO;
-    const pad = (boxW - inner) / 2;
-
-    const qrDataURL = await QRCode.toDataURL(state.url, {
-      width: Math.round(inner),
-      margin: 0,
-      color: { dark: "#000000", light: "#ffffff" }
-    });
+    const qrDataURL = await QRCode.toDataURL(state.url, { width: BOX_PX * 0.9, margin: 1 });
     const qrImg = await loadImage(qrDataURL);
-    ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
+    ctx.drawImage(qrImg, x + BOX_PX*0.05, y + BOX_PX*0.05, BOX_PX*0.9, BOX_PX*0.9);
 
-    // Event label under QR
-ctx.fillStyle = "#000";
-ctx.textAlign = "center";
-ctx.textBaseline = "top";
+    // Event label
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const px300 = Math.round((10 / 72) * DPI); // ~10pt
+    ctx.font = `italic ${px300}px "Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI",
+                -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif`;
+    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + px300 * 0.3);
 
-// Force 8pt at 300 DPI
-const fontPx = Math.round((8 / 72) * DPI);
-ctx.font = `italic ${fontPx}px "Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI",
-             -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif`;
-
-ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + fontPx * 0.3);
-
-
-    // Alignment guides (preview only)
-    if (isPreview) {
-      ctx.save();
-      ctx.strokeStyle = "rgba(0,0,0,0.25)";
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(W / 2, 0);
-      ctx.lineTo(W / 2, H);
-      ctx.moveTo(0, H / 2);
-      ctx.lineTo(W, H / 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  async function renderPreview() {
-    const stage = document.getElementById("preview-stage");
-    const cssW = stage.clientWidth;
-    const cssH = stage.clientHeight;
-    const dpr = window.devicePixelRatio || 1;
-
-    cnv.width = cssW * dpr;
-    cnv.height = cssH * dpr;
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH, true); // show guides
+    return cnv;
   }
 
   async function savePDF() {
-    const off = document.createElement("canvas");
-    off.width = PX_W;
-    off.height = PX_H;
-    const offCtx = off.getContext("2d");
-
-    await drawFlyer(offCtx, PX_W, PX_H, false); // no guides
-
+    if (!state.url) { alert("Enter a URL."); return; }
+    const cnv = await buildHiResCanvas();
+    const img = cnv.toDataURL("image/jpeg", 1.0);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "in", [INCH_W, INCH_H]);
-    pdf.addImage(off.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, INCH_W, INCH_H);
-    pdf.save(state.eventName.replace(/\W+/g, "_") + ".pdf");
+    const pdf = new jsPDF("p", "in", [PAGE_W, PAGE_H]);
+    pdf.addImage(img, "JPEG", 0, 0, PAGE_W, PAGE_H);
+    pdf.save(sanitizeName(state.eventName) + ".pdf");
   }
 
-  makeQR.addEventListener("click", async () => {
-    state.eventName = (eventIn.value || "Event").trim();
-    state.url = (urlIn.value || "https://www.sparklight.com").trim();
-    await renderPreview();
-  });
+  function resetAll() { location.reload(); }
 
-  saveBtn.addEventListener("click", savePDF);
-  resetBtn.addEventListener("click", () => location.reload());
-
-  (async () => {
-    state.bg = await loadImage("EVENT-QR-WHT.jpg");
-    await renderPreview();
-    window.addEventListener("resize", () => {
-      clearTimeout(renderPreview._t);
-      renderPreview._t = setTimeout(renderPreview, 100);
-    });
-  })();
+  saveBtn.addEventListener('click', savePDF);
+  resetBtn.addEventListener('click', resetAll);
 })();
-
-

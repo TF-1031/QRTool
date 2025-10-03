@@ -47,14 +47,15 @@ input[type="text"], input[type="url"] {
 }
 
 #qrBox {
-  width: 316px; 
-  height: 316px;
+  width: 37%;              /* scales with flyer width, matches ~3.16in */
+  aspect-ratio: 1 / 1;      /* always square */
   background: #fff;
-  position: relative;  /* so label can be placed inside */
-  display: grid; 
+  position: relative;
+  display: grid;
   place-items: center;
   pointer-events: auto;
 }
+
 
 #qrInner { 
   width: 90%; 
@@ -86,4 +87,5 @@ input[type="text"], input[type="url"] {
 
 
 #actions { margin-top: 12px; display: flex; gap: 10px; justify-content: center; }
+
 

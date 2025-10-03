@@ -5,7 +5,7 @@
   <title>Event Flyer Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="flyer.css" />
-  <!-- libs -->
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -14,11 +14,11 @@
 
   <div class="row">
     <input id="eventName" type="text" placeholder="Event Name" value="Event" />
-    <input id="urlInput"   type="url"  placeholder="Enter URL" value="https://www.sparklight.com" />
+    <input id="urlInput" type="url" placeholder="Enter URL" value="https://www.sparklight.com" />
     <button id="makeQR" class="btn">Generate QR</button>
   </div>
 
-  <!-- Preview -->
+  <!-- Preview area -->
   <div id="preview-stage">
     <canvas id="previewCanvas"></canvas>
   </div>

@@ -5,7 +5,9 @@
 
   const state = { eventName: "Event", url: "https://www.sparklight.com" };
 
-  const qrPrev   = document.getElementById('qrPreview');
+  const previewCanvas = document.getElementById('previewCanvas');
+  const pctx = previewCanvas.getContext('2d');
+
   const eventIn  = document.getElementById('eventName');
   const urlIn    = document.getElementById('urlInput');
   const makeQR   = document.getElementById('makeQR');
@@ -29,16 +31,48 @@
     });
   }
 
+  async function drawPreview() {
+    const ctx = pctx;
+    const canvas = previewCanvas;
+
+    // Match aspect ratio
+    canvas.width = 850;
+    canvas.height = Math.round((11 / 8.5) * 850);
+
+    // Draw background
+    const bg = await loadImage("EVENT-QR-WHT.jpg");
+    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+    // QR box in preview
+    const boxSize = canvas.width * 0.37; // proportional size
+    const x = (canvas.width - boxSize) / 2;
+    const y = (canvas.height - boxSize) / 2;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x, y, boxSize, boxSize);
+
+    // Draw QR
+    const qrDataURL = await QRCode.toDataURL(state.url, { width: boxSize * 0.8, margin: 0 });
+    const qrImg = await loadImage(qrDataURL);
+
+    ctx.drawImage(qrImg, x + boxSize * 0.1, y + boxSize * 0.1, boxSize * 0.8, boxSize * 0.8);
+
+    // Border
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + boxSize * 0.1, y + boxSize * 0.1, boxSize * 0.8, boxSize * 0.8);
+
+    // Event text under QR
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.font = "italic 10pt Effra, Segoe UI, Arial, sans-serif";
+    ctx.fillText(state.eventName, canvas.width / 2, y + boxSize + 5);
+  }
+
   makeQR.addEventListener('click', async () => {
     state.eventName = eventIn.value.trim() || "Event";
     state.url = urlIn.value.trim() || "https://www.sparklight.com";
-
-    const size = Math.min(
-      (qrPrev.width = document.getElementById('qrInner').clientWidth),
-      (qrPrev.height = document.getElementById('qrInner').clientHeight)
-    );
-    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 0 });
-
+    await drawPreview();
     document.getElementById('actions').style.display = 'flex';
   });
 
@@ -47,48 +81,35 @@
     cnv.width = PX_W; cnv.height = PX_H;
     const ctx = cnv.getContext('2d');
 
-    // Background
     const bg = await loadImage("EVENT-QR-WHT.jpg");
     ctx.drawImage(bg, 0, 0, PX_W, PX_H);
 
-    // White QR box
     const x = Math.round((PX_W - BOX_PX) / 2);
     const y = Math.round((PX_H - BOX_PX) / 2);
     ctx.fillStyle = "#fff";
     ctx.fillRect(x, y, BOX_PX, BOX_PX);
 
-    // QR code
-    const innerSize = BOX_PX * 0.80;
-    const pad = BOX_PX * 0.10 / 2;
-    const qrDataURL = await QRCode.toDataURL(state.url, { width: innerSize, margin: 0 });
+    const qrDataURL = await QRCode.toDataURL(state.url, { width: BOX_PX * 0.8, margin: 0 });
     const qrImg = await loadImage(qrDataURL);
 
-    // Black border around QR
+    ctx.drawImage(qrImg, x + BOX_PX * 0.1, y + BOX_PX * 0.1, BOX_PX * 0.8, BOX_PX * 0.8);
+
     ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + pad, y + pad, innerSize, innerSize);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + BOX_PX * 0.1, y + BOX_PX * 0.1, BOX_PX * 0.8, BOX_PX * 0.8);
 
-    ctx.drawImage(qrImg, x + pad, y + pad, innerSize, innerSize);
-
-    // ✅ Event label under QR (true 8pt scaled to 300DPI)
+    // 8pt font scaled to 300DPI
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-
-    const ptSize = 8;  
-    const pxFont = Math.round(ptSize * DPI / 72); // convert 8pt → 300DPI pixels
-    ctx.font = `italic ${pxFont}px "Effra","Segoe UI","Arial",sans-serif`;
-
+    const pxFont = Math.round(8 * DPI / 72); 
+    ctx.font = `italic ${pxFont}px Effra, "Segoe UI", Arial, sans-serif`;
     ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + 5);
 
     return cnv;
   }
 
   async function savePDF() {
-    if (!state.url) {
-      alert("Enter a URL.");
-      return;
-    }
     const cnv = await buildHiResCanvas();
     const img = cnv.toDataURL("image/jpeg", 1.0);
     const { jsPDF } = window.jspdf;

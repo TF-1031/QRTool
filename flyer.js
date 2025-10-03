@@ -60,13 +60,13 @@
     const qrImg = await loadImage(qrDataURL);
     ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
-    // Event label
-    const fontPx = Math.round(inner * 0.08);
-    const labelOffset = fontPx * 0.6; // tuned offset
+    // Event label — fixed ~10pt at 300dpi (~40px)
+    const fontPx = Math.round((10 / 72) * DPI); // convert 10pt → px at 300dpi
+    const labelOffset = fontPx * 0.6;
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.font = `italic ${fontPx}px Arial, sans-serif`;
+    ctx.font = `italic ${fontPx}px "Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`;
     ctx.fillText(state.eventName, W / 2, y + boxH + labelOffset);
 
     // Alignment guides (preview only)

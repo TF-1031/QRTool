@@ -139,6 +139,17 @@
   saveBtn.addEventListener("click", savePDF);
   resetBtn.addEventListener("click", () => location.reload());
 
+  // Event label at bottom center
+const fontPx = Math.round((8 / 72) * DPI);  // 8pt @ 300 dpi
+ctx.font = `italic ${fontPx}px ${FONT_STACK}`;
+ctx.fillStyle = "#000";
+ctx.textAlign = "center";
+ctx.textBaseline = "bottom";
+
+// 5px margin from bottom edge
+ctx.fillText(state.eventName, W / 2, H - 5);
+
+
   // ---------- Init ----------
   (async () => {
     state.bg = await loadImage("EVENT-QR-WHT.jpg");
@@ -149,3 +160,4 @@
     });
   })();
 })();
+

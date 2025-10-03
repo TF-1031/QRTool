@@ -3,7 +3,7 @@
   const PX_W = DPI * PAGE_W, PX_H = DPI * PAGE_H;
   const BOX_IN = 3.16, BOX_PX = Math.round(BOX_IN * DPI);
 
-  const state = { eventName: "Event", url: "" }; // default Event
+  const state = { eventName: "Event", url: "https://www.sparklight.com" };
 
   const qrPrev   = document.getElementById('qrPreview');
   const eventLbl = document.getElementById('eventLabel');
@@ -12,7 +12,6 @@
   const urlIn    = document.getElementById('urlInput');
   const makeQR   = document.getElementById('makeQR');
   const saveBtn  = document.getElementById('saveBtn');
-  const printBtn = document.getElementById('printBtn');
   const resetBtn = document.getElementById('resetBtn');
 
   function sanitizeName(name) {
@@ -25,28 +24,32 @@
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous"; // important for GitHub Pages hosting
+      img.crossOrigin = "anonymous"; 
       img.onload = () => resolve(img);
       img.onerror = reject;
       img.src = src;
     });
   }
 
-  makeQR.addEventListener('click', async () => {
-    state.eventName = eventIn.value.trim() || "Event"; // ✅ default
-    state.url = urlIn.value.trim();
-    if (!state.url) {
-      alert("Enter a URL.");
-      return;
-    }
-
+  async function renderPreview(opacity = 0.5) {
     const size = Math.min(
       (qrPrev.width = document.getElementById('qrInner').clientWidth),
       (qrPrev.height = document.getElementById('qrInner').clientHeight)
     );
-    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 0 });
+    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 0, color: { dark: "#000000", light: "#ffffff" } });
 
+    qrPrev.style.opacity = 1;           // QR stays fully black
     eventLbl.textContent = state.eventName;
+    eventLbl.style.opacity = opacity;   // Only label fades
+  }
+
+  // Initial placeholder preview
+  renderPreview(0.5);
+
+  makeQR.addEventListener('click', async () => {
+    state.eventName = eventIn.value.trim() || "Event";
+    state.url = urlIn.value.trim() || "https://www.sparklight.com";
+    await renderPreview(1); // label full opacity when generated
     document.getElementById('actions').style.display = 'flex';
   });
 
@@ -63,31 +66,31 @@
     ctx.fillStyle = "#fff";
     ctx.fillRect(x, y, BOX_PX, BOX_PX);
 
-    // ✅ QR code with 10% total padding (5% each side)
-    const innerSize = BOX_PX * 0.80;        // 80% fill
-    const pad = BOX_PX * 0.10 / 2;          // 5% per side
-    const qrDataURL = await QRCode.toDataURL(state.url, { width: innerSize, margin: 0 });
+    // QR code with 10% padding
+    const innerSize = BOX_PX * 0.80;
+    const pad = BOX_PX * 0.10 / 2;
+    const qrDataURL = await QRCode.toDataURL(state.url, {
+      width: innerSize,
+      margin: 0,
+      color: { dark: "#000000", light: "#ffffff" }
+    });
     const qrImg = await loadImage(qrDataURL);
     ctx.drawImage(qrImg, x + pad, y + pad, innerSize, innerSize);
 
-   // Event label under QR
-ctx.fillStyle = "#000";
-ctx.textAlign = "center";
-ctx.textBaseline = "top";
-const cssPx = 12, px300 = Math.round(cssPx * DPI / 96);
-ctx.font = `italic 400 ${px300}px Arial, sans-serif`;
-    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + Math.round(0.17 * px300));
-const labelOffset = Math.round(0.35 * px300); // more generous padding
-ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + labelOffset);
+    // Event label
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const cssPx = 12, px300 = Math.round(cssPx * DPI / 96);
+    ctx.font = `italic 400 ${px300}px Arial, sans-serif`;
+
+    const labelOffset = Math.round(0.35 * px300);
+    ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + labelOffset);
 
     return cnv;
   }
 
   async function savePDF() {
-    if (!state.url) {
-      alert("Enter a URL.");
-      return;
-    }
     const cnv = await buildHiResCanvas();
     const img = cnv.toDataURL("image/jpeg", 1.0);
     const { jsPDF } = window.jspdf;
@@ -96,29 +99,8 @@ ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + labelOffset);
     pdf.save(sanitizeName(state.eventName) + ".pdf");
   }
 
-  async function printPDF() {
-    if (!state.url) {
-      alert("Enter a URL.");
-      return;
-    }
-    const cnv = await buildHiResCanvas();
-    const img = cnv.toDataURL("image/jpeg", 1.0);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "in", [PAGE_W, PAGE_H]);
-    pdf.addImage(img, "JPEG", 0, 0, PAGE_W, PAGE_H);
-    const blob = pdf.output("blob");
-    const url = URL.createObjectURL(blob);
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = 0; iframe.style.height = 0; iframe.style.border = 0;
-    document.body.appendChild(iframe);
-    iframe.onload = () => setTimeout(() => iframe.contentWindow.print(), 150);
-    iframe.src = url;
-  }
-
   function resetAll() { location.reload(); }
 
   saveBtn.addEventListener('click', savePDF);
-  printBtn.addEventListener('click', printPDF);
   resetBtn.addEventListener('click', resetAll);
 })();

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Event Flyer Generator</title>
-  <link rel="stylesheet" href="flyer.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="flyer.css" />
+  <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -12,24 +13,17 @@
   <h2>Event Flyer Generator</h2>
 
   <div class="row">
-    <input type="text" id="eventName" placeholder="Event Name" value="Event">
-    <input type="url" id="urlInput" placeholder="Enter URL" value="https://www.sparklight.com">
+    <input id="eventName" type="text" placeholder="Event Name" value="Event" />
+    <input id="urlInput"   type="url"  placeholder="Enter URL" value="https://www.sparklight.com" />
     <button id="makeQR" class="btn">Generate QR</button>
   </div>
 
-  <div id="flyer">
-    <div id="qrWrap">
-      <div id="qrBox">
-        <div id="qrInner">
-          <canvas id="qrPreview"></canvas>
-        </div>
-        <div id="eventLabel">Event</div>
-      </div>
-    </div>
+  <!-- Preview -->
+  <div id="preview-stage">
+    <canvas id="previewCanvas"></canvas>
   </div>
 
-  <div id="actions" style="display:none;">
-    <button id="printBtn" class="btn">Print</button>
+  <div id="actions">
     <button id="saveBtn" class="btn">Save</button>
     <button id="resetBtn" class="btn">Reset</button>
   </div>

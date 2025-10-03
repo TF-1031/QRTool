@@ -1,105 +1,74 @@
 (() => {
-  const DPI = 300, PAGE_W = 8.5, PAGE_H = 11;
-  const PX_W = DPI * PAGE_W, PX_H = DPI * PAGE_H;
-  const BOX_IN = 3.16, BOX_PX = Math.round(BOX_IN * DPI);
+  // --- Constants
+  const INCH_W = 8.5, INCH_H = 11;
+  const DPI_PRINT = 300;                          // PDF export DPI
+  const PX_PRINT_W = Math.round(INCH_W * DPI_PRINT);
+  const PX_PRINT_H = Math.round(INCH_H * DPI_PRINT);
 
-  const state = { eventName: "Event", url: "https://www.sparklight.com" };
+  const BOX_IN = 3.16;                             // white box size in inches
+  const BOX_W_RATIO = BOX_IN / INCH_W;             // relative to page width
+  const BOX_H_RATIO = BOX_IN / INCH_H;             // relative to page height (same; square)
+  const QR_INNER_RATIO = 0.90;                     // 10% total padding inside the white box
 
-  const qrPrev   = document.getElementById('qrPreview');
-  const eventLbl = document.getElementById('eventLabel');
+  // --- State
+  const state = {
+    eventName: "Event",
+    url: "https://www.sparklight.com",
+    bg: null,                                      // Image element
+  };
 
-  const eventIn  = document.getElementById('eventName');
-  const urlIn    = document.getElementById('urlInput');
-  const makeQR   = document.getElementById('makeQR');
-  const saveBtn  = document.getElementById('saveBtn');
-  const resetBtn = document.getElementById('resetBtn');
+  // --- Elements
+  const cnv = document.getElementById("previewCanvas");
+  const makeQR = document.getElementById("makeQR");
+  const saveBtn = document.getElementById("saveBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const eventIn = document.getElementById("eventName");
+  const urlIn = document.getElementById("urlInput");
 
-  function sanitizeName(name) {
-    return (name || "flyer")
-      .replace(/[^a-zA-Z0-9 ]/g, "")
-      .trim()
-      .replace(/\s+/g, "_");
-  }
-
+  // --- Load background (same-origin on GitHub Pages)
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous"; 
+      img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
       img.onerror = reject;
       img.src = src;
     });
   }
 
-  async function renderPreview(opacity = 0.5) {
-    const size = Math.min(
-      (qrPrev.width = document.getElementById('qrInner').clientWidth),
-      (qrPrev.height = document.getElementById('qrInner').clientHeight)
-    );
-    await QRCode.toCanvas(qrPrev, state.url, { width: size, margin: 0, color: { dark: "#000000", light: "#ffffff" } });
+  // --- Core renderer (used for BOTH preview and export)
+  // sizePx: the page size in pixels (width,height) for this render.
+  async function drawFlyer(ctx, sizePx) {
+    const [W, H] = sizePx;
 
-    qrPrev.style.opacity = 1;           // QR stays fully black
-    eventLbl.textContent = state.eventName;
-    eventLbl.style.opacity = opacity;   // Only label fades
-  }
+    // Draw background scaled to full page
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(state.bg, 0, 0, W, H);
 
-  // Initial placeholder preview
-  renderPreview(0.5);
+    // Compute white box size/pos from page ratios → stays perfectly centered
+    const boxW = BOX_W_RATIO * W;
+    const boxH = BOX_H_RATIO * H; // same as boxW, just clear intent
+    const xc = W / 2, yc = H / 2;
+    const x = xc - boxW / 2;
+    const y = yc - boxH / 2;
 
-  makeQR.addEventListener('click', async () => {
-    state.eventName = eventIn.value.trim() || "Event";
-    state.url = urlIn.value.trim() || "https://www.sparklight.com";
-    await renderPreview(1); // label full opacity when generated
-    document.getElementById('actions').style.display = 'flex';
-  });
+    // White box
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x, y, boxW, boxH);
 
-  async function buildHiResCanvas() {
-    const cnv = document.createElement('canvas');
-    cnv.width = PX_W; cnv.height = PX_H;
-    const ctx = cnv.getContext('2d');
+    // QR (black on white), with 10% total padding (5% each side)
+    const inner = Math.min(boxW, boxH) * QR_INNER_RATIO; // 90% of box
+    const pad = (Math.min(boxW, boxH) - inner) / 2;
 
-    const bg = await loadImage("EVENT-QR-WHT.jpg");
-    ctx.drawImage(bg, 0, 0, PX_W, PX_H);
-
-    const x = Math.round((PX_W - BOX_PX) / 2);
-    const y = Math.round((PX_H - BOX_PX) / 2);
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(x, y, BOX_PX, BOX_PX);
-
-    // QR code with 10% padding
-    const innerSize = BOX_PX * 0.80;
-    const pad = BOX_PX * 0.10 / 2;
-    const qrDataURL = await QRCode.toDataURL(state.url, {
-      width: innerSize,
+    // Generate a QR at the exact inner size (no extra margin)
+    const qrDataURL = await QRCode.toDataURL(state.url || "https://www.sparklight.com", {
+      width: Math.round(inner),
       margin: 0,
-      color: { dark: "#000000", light: "#ffffff" }
+      color: { dark: "#000000", light: "#ffffff" },
     });
     const qrImg = await loadImage(qrDataURL);
-    ctx.drawImage(qrImg, x + pad, y + pad, innerSize, innerSize);
+    ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
-    // Event label
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    const cssPx = 12, px300 = Math.round(cssPx * DPI / 96);
-  ctx.font = `italic 400 ${px300}px Arial, sans-serif`;
-ctx.fillText(state.eventName, PX_W / 2, y + BOX_PX + Math.round(0.17 * px300));
-
-    return cnv;
-  }
-
-  async function savePDF() {
-    const cnv = await buildHiResCanvas();
-    const img = cnv.toDataURL("image/jpeg", 1.0);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "in", [PAGE_W, PAGE_H]);
-    pdf.addImage(img, "JPEG", 0, 0, PAGE_W, PAGE_H);
-    pdf.save(sanitizeName(state.eventName) + ".pdf");
-  }
-
-  function resetAll() { location.reload(); }
-
-  saveBtn.addEventListener('click', savePDF);
-  resetBtn.addEventListener('click', resetAll);
-})();
-
+    // Event name (italic) below the white box
+    // Use font size proportional to white box for consistent look
+    c

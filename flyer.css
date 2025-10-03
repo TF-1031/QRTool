@@ -47,26 +47,43 @@ input[type="text"], input[type="url"] {
 }
 
 #qrBox {
-  width: 316px; height: 316px;
+  width: 316px; 
+  height: 316px;
   background: #fff;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  position: relative;  /* so label can be placed inside */
+  display: grid; 
+  place-items: center;
   pointer-events: auto;
 }
 
-#qrInner { width: 90%; height: 90%; display: grid; place-items: center; }
-#qrPreview { width: 100%; height: 100%; display: block; }
+#qrInner { 
+  width: 90%; 
+  height: 90%; 
+  display: grid; 
+  place-items: center; 
+}
 
-/* Event label under QR */
+#qrPreview { 
+  width: 100%; 
+  height: 100%; 
+  display: block; 
+}
+
+/* Event label under QR (absolute, doesn’t push layout) */
 #eventLabel {
-  margin-top: 24px;
+  position: absolute;
+  bottom: -22px;       /* pushes just below QR box */
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 12px;
   font-weight: 400;
   font-style: italic;
   text-align: center;
   color: #000;
-  opacity: 0.5; /* placeholder look */
+  opacity: 0.5;        /* placeholder look */
   user-select: none;
 }
 
+
 #actions { margin-top: 12px; display: flex; gap: 10px; justify-content: center; }
+

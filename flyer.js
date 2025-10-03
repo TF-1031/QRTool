@@ -92,7 +92,7 @@
     cnv.height = Math.round(cssH * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH); // ✅ clean, no guides
+    await drawFlyer(ctx, cssW, cssH); // ✅ no crosshairs
   }
 
   async function savePDF() {

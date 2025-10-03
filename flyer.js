@@ -75,12 +75,10 @@
 
     // Event name at bottom center
     const fontPx = Math.round((LABEL_PT / 72) * DPI);
-    ctx.font = `italic ${fontPx}px ${FONT_STACK}`;
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillText(state.eventName, W / 2, H - 5);
-  }
+    ctx.font = "italic 400 8pt 'Effra','Segoe UI','Arial',sans-serif";
+ctx.textAlign = "center";
+ctx.textBaseline = "top";
+ctx.fillText(state.eventName, x + boxSize / 2, y + boxSize + 5);
 
   async function renderPreview() {
     const stage = document.getElementById("preview-stage");
@@ -125,3 +123,4 @@
     });
   })();
 })();
+

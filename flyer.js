@@ -44,7 +44,7 @@
       .replace(/\s+/g, "_");
   }
 
-  async function drawFlyer(ctx, W, H) {
+  async function drawFlyer(ctx, W, H, forPrint = false) {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(state.bg, 0, 0, W, H);
 
@@ -73,9 +73,15 @@
     ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
     // Event name at bottom center
-    const fontPx = Math.round((6 / 72) * DPI);   // smaller font (6pt)
-    ctx.font = `italic ${fontPx}px ${FONT_STACK}`;
-    ctx.fillStyle = "#666";                      // gray text
+    if (forPrint) {
+      // scaled thin italic 6pt for 300 dpi
+      const fontPx = Math.round((6 / 72) * DPI);
+      ctx.font = `italic 300 ${fontPx}px ${FONT_STACK}`;
+    } else {
+      // smaller thin preview text
+      ctx.font = `italic 300 11px ${FONT_STACK}`;
+    }
+    ctx.fillStyle = "#666"; // subtle gray
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     ctx.fillText(state.eventName, W / 2, H - 5);
@@ -91,14 +97,14 @@
     cnv.height = Math.round(cssH * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH);
+    await drawFlyer(ctx, cssW, cssH, false);
   }
 
   async function savePDF() {
     const off = document.createElement("canvas");
     off.width = PX_W; off.height = PX_H;
     const offCtx = off.getContext("2d");
-    await drawFlyer(offCtx, PX_W, PX_H);
+    await drawFlyer(offCtx, PX_W, PX_H, true);
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "in", [INCH_W, INCH_H]);

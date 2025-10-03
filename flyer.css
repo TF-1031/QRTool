@@ -34,13 +34,29 @@ input[type="text"], input[type="url"] {
   margin: 0 auto 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  background: #fff;
+  background: url("EVENT-QR-WHT.jpg") center/cover no-repeat;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 #previewCanvas {
-  width: 100%;
-  height: 100%;
+  width: 45%;   /* QR size relative to flyer */
+  height: auto;
   display: block;
+  border: 1px solid #000; /* thin boundary */
+  background: #fff;
+}
+
+#eventLabel {
+  margin-top: 6px;
+  font-size: 10pt;   /* ~10pt */
+  font-style: italic;
+  font-weight: 400;
+  text-align: center;
+  color: #000;
 }
 
 #actions {

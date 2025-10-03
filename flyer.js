@@ -32,7 +32,7 @@
     });
   }
 
-  async function drawFlyer(ctx, W, H) {
+  async function drawFlyer(ctx, W, H, isPreview = false) {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(state.bg, 0, 0, W, H);
 
@@ -41,9 +41,14 @@
     const x = (W - boxW) / 2;
     const y = (H - boxH) / 2;
 
+    // White QR box with black outline
     ctx.fillStyle = "#fff";
     ctx.fillRect(x, y, boxW, boxH);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000";
+    ctx.strokeRect(x, y, boxW, boxH);
 
+    // QR code inside
     const inner = boxW * QR_RATIO;
     const pad = (boxW - inner) / 2;
 
@@ -57,12 +62,26 @@
 
     // Event label
     const fontPx = Math.round(inner * 0.08);
-    const labelOffset = fontPx * 0.6;  // tighter than before
+    const labelOffset = fontPx * 0.6; // tuned offset
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.font = `italic ${fontPx}px Arial, sans-serif`;
     ctx.fillText(state.eventName, W / 2, y + boxH + labelOffset);
+
+    // Alignment guides (preview only)
+    if (isPreview) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 0);
+      ctx.lineTo(W / 2, H);
+      ctx.moveTo(0, H / 2);
+      ctx.lineTo(W, H / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   async function renderPreview() {
@@ -75,15 +94,16 @@
     cnv.height = cssH * dpr;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH);
+    await drawFlyer(ctx, cssW, cssH, true); // show guides
   }
 
   async function savePDF() {
     const off = document.createElement("canvas");
-    off.width = PX_W; off.height = PX_H;
+    off.width = PX_W;
+    off.height = PX_H;
     const offCtx = off.getContext("2d");
 
-    await drawFlyer(offCtx, PX_W, PX_H);
+    await drawFlyer(offCtx, PX_W, PX_H, false); // no guides
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "in", [INCH_W, INCH_H]);

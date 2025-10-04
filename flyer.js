@@ -113,9 +113,17 @@
   }
 
   makeQR.addEventListener("click", async () => {
-    state.eventName = (eventIn.value || "Event").trim();
-    state.url = (urlIn.value || "https://www.sparklight.com").trim();
-    await renderPreview();
+  state.eventName = (eventIn.value || "Event").trim();
+  state.url = (urlIn.value || "https://www.sparklight.com").trim();
+  
+  // 🔊 play sound
+  const ding = document.getElementById("dingSound");
+  if (ding) {
+    try { ding.currentTime = 0; ding.play(); } catch (e) { console.warn("Audio blocked by browser", e); }
+  }
+
+  await renderPreview();
+
   });
 
   saveBtn.addEventListener("click", savePDF);

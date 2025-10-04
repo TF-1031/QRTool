@@ -112,17 +112,23 @@
     pdf.save(sanitizeFilename(state.eventName) + ".pdf");
   }
 
-  makeQR.addEventListener("click", async () => {
+makeQR.addEventListener("click", async () => {
   state.eventName = (eventIn.value || "Event").trim();
   state.url = (urlIn.value || "https://www.sparklight.com").trim();
-  
-  // 🔊 play sound
-  const ding = document.getElementById("dingSound");
-  if (ding) {
-    try { ding.currentTime = 0; ding.play(); } catch (e) { console.warn("Audio blocked by browser", e); }
+
+  // 🔊 Play Miami.mp3
+  const sound = document.getElementById("convertSound");
+  if (sound) {
+    try {
+      sound.currentTime = 0; // restart if already playing
+      sound.play();
+    } catch (e) {
+      console.warn("Audio playback blocked by browser", e);
+    }
   }
 
   await renderPreview();
+});
 
   });
 

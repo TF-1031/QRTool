@@ -112,29 +112,30 @@
     pdf.save(sanitizeFilename(state.eventName) + ".pdf");
   }
 
-makeQR.addEventListener("click", async () => {
-  state.eventName = (eventIn.value || "Event").trim();
-  state.url = (urlIn.value || "https://www.sparklight.com").trim();
+  // ✅ Generate button
+  makeQR.addEventListener("click", async () => {
+    state.eventName = (eventIn.value || "Event").trim();
+    state.url = (urlIn.value || "https://www.sparklight.com").trim();
 
-  // 🔊 Play Miami.mp3
-  const sound = document.getElementById("convertSound");
-  if (sound) {
-    try {
-      sound.currentTime = 0; // restart if already playing
-      sound.play();
-    } catch (e) {
-      console.warn("Audio playback blocked by browser", e);
+    // 🔊 Play Miami.mp3
+    const sound = document.getElementById("convertSound");
+    if (sound) {
+      try {
+        sound.currentTime = 0; // restart if already playing
+        sound.play();
+      } catch (e) {
+        console.warn("Audio playback blocked by browser", e);
+      }
     }
-  }
 
-  await renderPreview();
-});
-
+    await renderPreview();
   });
 
+  // ✅ Save & Reset
   saveBtn.addEventListener("click", savePDF);
   resetBtn.addEventListener("click", () => location.reload());
 
+  // ✅ Initial background load
   (async () => {
     state.bg = await loadImage("EVENT-QR-WHT.jpg");
     await renderPreview();

@@ -74,14 +74,12 @@
 
     // Event name at bottom center
     if (forPrint) {
-      // scaled thin italic 6pt for 300 dpi
       const fontPx = Math.round((6 / 72) * DPI);
       ctx.font = `italic 300 ${fontPx}px ${FONT_STACK}`;
     } else {
-      // smaller thin preview text
       ctx.font = `italic 300 11px ${FONT_STACK}`;
     }
-    ctx.fillStyle = "#666"; // subtle gray
+    ctx.fillStyle = "#666";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     ctx.fillText(state.eventName, W / 2, H - 5);
@@ -117,14 +115,16 @@
     state.eventName = (eventIn.value || "Event").trim();
     state.url = (urlIn.value || "https://www.sparklight.com").trim();
 
-    // 🔊 Play Miami.mp3
-    const sound = document.getElementById("convertSound");
-    if (sound) {
-      try {
-        sound.currentTime = 0; // restart if already playing
-        sound.play();
-      } catch (e) {
-        console.warn("Audio playback blocked by browser", e);
+    // 🔊 Play Miami.mp3 only if event name includes "Miami"
+    if (state.eventName.toLowerCase().includes("miami")) {
+      const sound = document.getElementById("convertSound");
+      if (sound) {
+        try {
+          sound.currentTime = 0;
+          sound.play();
+        } catch (e) {
+          console.warn("Audio playback blocked by browser", e);
+        }
       }
     }
 

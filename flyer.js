@@ -33,6 +33,8 @@
   const saveBtn = document.getElementById("saveBtn");
   const resetBtn = document.getElementById("resetBtn");
 
+  const BRAND_COLOR = "#8d3b91";
+
   function sanitizeFilename(name) {
     return (name || "Event")
       .replace(/[^a-zA-Z0-9 ]/g, "")
@@ -57,16 +59,26 @@
     return state.orientation === "landscape" ? INCH_LANDSCAPE : INCH_PORTRAIT;
   }
 
+  function drawText(ctx, text, x, y, size, weight = "normal", align = "center", color = "#1f1f23") {
+    ctx.font = `${weight} ${size}px ${FONT_STACK}`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.textBaseline = "top";
+    ctx.fillText(text, x, y);
+  }
+
   async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
 
-    // Background image
+    // === Background image ===
     if (state.bgImage) {
       ctx.save();
       ctx.globalAlpha = 0.7;
 
-      const footerHeight = 10;
+      const footerFontSize = 10;
+      const footerHeight = 3 * footerFontSize;
       const usableHeight = H - footerHeight;
+
       const imgAspect = state.bgImage.width / state.bgImage.height;
       const canvasAspect = W / usableHeight;
 
@@ -86,30 +98,26 @@
       ctx.restore();
     }
 
-    // H1 Event Info
-    ctx.textBaseline = "top";
+    // === Contest Entry Details (H1) ===
     const boxSize = Math.min(W, H) * 0.4;
     const h1FontSize = boxSize * 1.2 * 0.08;
 
     if (state.eventInfo) {
-      ctx.font = `bold ${h1FontSize}px ${FONT_STACK}`;
-      ctx.fillStyle = "#1f1f23";
-      ctx.textAlign = "center";
-      ctx.fillText(state.eventInfo, W / 2, 40);
-      drawText(ctx, "Scan to Enter", W / 2, 60 + h1FontSize, 16);
-    } else {
-      drawText(ctx, "Scan to Enter", W / 2, 40, 22, "normal");
+      drawText(ctx, state.eventInfo, W / 2, 40, h1FontSize, "900", "center", BRAND_COLOR);
     }
 
-    // QR Code box
+    // === QR Code Box ===
     const boxX = (W - boxSize) / 2;
     const boxY = (H - boxSize) / 2;
+
+    // "Scan to Enter" - just above QR
+    drawText(ctx, "Scan to Enter", W / 2, boxY - 26, 18, "bold");
+
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(boxX, boxY, boxSize, boxSize);
     ctx.strokeStyle = "#000";
     ctx.strokeRect(boxX, boxY, boxSize, boxSize);
 
-    // QR
     const qrSize = boxSize * 0.92;
     const qrPad = (boxSize - qrSize) / 2;
 
@@ -128,30 +136,24 @@
 
     ctx.drawImage(qrImg, boxX + qrPad, boxY + qrPad, qrSize, qrSize);
 
-    // Footer white box
-    const footerHeight = 10;
-    ctx.fillStyle = "#fff";
+    // === Footer Disclaimer ===
+    const footerFontSize = 10;
+    const footerHeight = 3 * footerFontSize;
+
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, H - footerHeight, W, footerHeight);
 
-    ctx.font = `italic 10px ${FONT_STACK}`;
+    ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
     ctx.fillStyle = "#333";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
   }
 
-  function drawText(ctx, text, x, y, size, weight = "normal", align = "center") {
-    ctx.font = `${weight} ${size}px ${FONT_STACK}`;
-    ctx.fillStyle = "#1f1f23";
-    ctx.textAlign = align;
-    ctx.fillText(text, x, y);
-  }
-
   async function renderPreview() {
     const dims = getOrientationDims();
     const stage = document.getElementById("preview-stage");
 
-    // Set CSS aspect ratio for preview
     stage.style.aspectRatio = `${dims.w} / ${dims.h}`;
 
     const cssW = stage.clientWidth;
@@ -190,7 +192,6 @@
     state.eventInfo = infoIn.value.trim();
     state.disclaimer = disclaimerIn.value.trim() || DEFAULT_DISCLAIMER;
 
-    // Get orientation from selected radio
     const selected = [...orientationInputs].find(r => r.checked);
     state.orientation = selected?.value || "portrait";
 

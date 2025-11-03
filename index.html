@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Flyer Generator v2.0</title>
+  <title>Flyer Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="flyer.css" />
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <h2>Flyer Generator 2.0</h2>
+  <h2>Flyer Generator</h2>
 
   <div class="row">
     <input id="urlInput" type="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" />
@@ -24,18 +24,12 @@
   </div>
 
   <div class="row">
-    <label>
-      <input type="radio" name="orientation" value="portrait" checked />
-      Portrait
-    </label>
-    <label>
-      <input type="radio" name="orientation" value="landscape" />
-      Landscape
-    </label>
+    <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
+    <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
   </div>
 
   <div class="row">
-    <textarea id="disclaimerInput" placeholder="Disclaimer...">No purchase necessary. Entry open to all eligible participants.
+    <textarea id="disclaimerInput">No purchase necessary. Entry open to all eligible participants.
 Scan QR Code to see full terms and conditions at the contest link.</textarea>
   </div>
 
@@ -45,7 +39,6 @@ Scan QR Code to see full terms and conditions at the contest link.</textarea>
   </div>
 
   <div class="row">
-    <button id="makeQR" class="btn">Generate Flyer</button>
     <button id="saveBtn" class="btn">Save PDF</button>
     <button id="resetBtn" class="btn">Reset</button>
   </div>

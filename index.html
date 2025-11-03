@@ -12,25 +12,36 @@
   <h2>Flyer Generator 2.0</h2>
 
   <div class="row">
-    <input id="eventName" type="text" placeholder="Event Name" value="Event" />
-    <input id="urlInput" type="url" placeholder="https://your-url.com" value="https://your-url.com" />
+    <input id="urlInput" type="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" />
   </div>
 
   <div class="row">
-    <select id="orientation">
-      <option value="portrait">Portrait (8.5x11)</option>
-      <option value="landscape">Landscape (11x8.5)</option>
-    </select>
-    <input id="bgUpload" type="file" accept="image/*" />
+    <input id="eventName" type="text" placeholder="Event Name" />
+  </div>
+
+  <div class="row">
+    <input id="eventInfoInput" type="text" placeholder="Contest Entry Details" />
+  </div>
+
+  <div class="row">
+    <label>
+      <input type="radio" name="orientation" value="portrait" checked />
+      Portrait
+    </label>
+    <label>
+      <input type="radio" name="orientation" value="landscape" />
+      Landscape
+    </label>
+  </div>
+
+  <div class="row">
+    <textarea id="disclaimerInput" placeholder="Disclaimer...">No purchase necessary. Entry open to all eligible participants.
+Scan QR Code to see full terms and conditions at the contest link.</textarea>
   </div>
 
   <div class="row">
     <input id="headingInput" type="text" placeholder="Optional Heading (H2 above QR)" />
-    <input id="eventInfoInput" type="text" placeholder="Event Information (replaces 'Scan to Enter')" />
-  </div>
-
-  <div class="row">
-    <textarea id="disclaimerInput" placeholder="Disclaimer text... (optional)"></textarea>
+    <input id="bgUpload" type="file" accept="image/*" />
   </div>
 
   <div class="row">

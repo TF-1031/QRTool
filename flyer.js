@@ -58,34 +58,85 @@
     ctx.fillText(text, x, y);
   }
 
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '', lines = [], testLine = '', metrics;
+    
+    for (let i = 0; i < words.length; i++) {
+      testLine = line + words[i] + ' ';
+      metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && i > 0) {
+        lines.push(line.trim());
+        line = words[i] + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push(line.trim());
+
+    lines.forEach((l, i) => {
+      ctx.fillText(l, x, y + i * lineHeight);
+    });
+  }
+
   async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
 
-    // Draw background image
+    // Draw background image (covering the canvas minus 10px white footer)
     if (state.bgImage) {
+      ctx.save();
       ctx.globalAlpha = 0.7;
-      const aspect = state.bgImage.width / state.bgImage.height;
-      const targetHeight = W / aspect;
-      ctx.drawImage(state.bgImage, 0, (H - targetHeight) / 2, W, targetHeight);
-      ctx.globalAlpha = 1.0;
+
+      const disclaimerHeight = 10;
+      const targetH = H - disclaimerHeight;
+
+      const imgAspect = state.bgImage.width / state.bgImage.height;
+      const canvasAspect = W / targetH;
+
+      let drawW, drawH;
+      if (imgAspect > canvasAspect) {
+        drawH = targetH;
+        drawW = imgAspect * drawH;
+      } else {
+        drawW = W;
+        drawH = drawW / imgAspect;
+      }
+
+      const offsetX = (W - drawW) / 2;
+      const offsetY = (targetH - drawH) / 2;
+
+      ctx.drawImage(state.bgImage, offsetX, offsetY, drawW, drawH);
+      ctx.restore();
     }
 
-    // Heading
-    if (state.heading) {
-      drawText(ctx, state.heading, W / 2, 60, 28, "bold");
-    }
+    // Set text baseline
+    ctx.textBaseline = "top";
 
-    // White QR box
-    const boxSize = Math.min(W, H) * 0.5;
+    // Compute QR box size
+    const boxSize = Math.min(W, H) * 0.4;
     const boxX = (W - boxSize) / 2;
     const boxY = (H - boxSize) / 2;
 
+    // H1 (Event Info) - 120% of QR box height
+    const h1Size = boxSize * 1.2;
+    if (state.eventInfo) {
+      drawText(ctx, state.eventInfo, W / 2, 40, h1Size * 0.08, "bold");
+    } else {
+      drawText(ctx, "Scan to Enter", W / 2, 40, h1Size * 0.08, "normal");
+    }
+
+    // Subheading if event info provided
+    if (state.eventInfo) {
+      drawText(ctx, "Scan to Enter", W / 2, 60 + h1Size * 0.08, 16, "normal");
+    }
+
+    // White QR box
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(boxX, boxY, boxSize, boxSize);
     ctx.strokeStyle = "#000";
     ctx.strokeRect(boxX, boxY, boxSize, boxSize);
 
-    // QR Code
+    // QR code
     const qrSize = boxSize * 0.92;
     const qrPad = (boxSize - qrSize) / 2;
 
@@ -95,25 +146,25 @@
       color: { dark: "#000000", light: "#ffffff" }
     });
 
-    const qrImg = new Image();
-    await new Promise((res, rej) => {
-      qrImg.onload = res;
-      qrImg.onerror = rej;
-      qrImg.src = qrDataURL;
+    const qrImg = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = qrDataURL;
     });
 
     ctx.drawImage(qrImg, boxX + qrPad, boxY + qrPad, qrSize, qrSize);
 
-    // Event Info / default "Scan to Enter"
-    const infoText = state.eventInfo || "Scan to Enter";
-    drawText(ctx, infoText, W / 2, boxY + boxSize + 30, 18, "normal");
+    // Footer disclaimer box
+    const footerHeight = 10;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, H - footerHeight, W, footerHeight);
 
-    // Disclaimer inside white box
-    const disclaimerY = boxY + boxSize - 8;
-    ctx.font = `italic 12px ${FONT_STACK}`;
-    ctx.fillStyle = "#444";
+    ctx.font = `italic 10px ${FONT_STACK}`;
+    ctx.fillStyle = "#333";
     ctx.textAlign = "center";
-    ctx.fillText(state.disclaimer, W / 2, disclaimerY);
+    ctx.textBaseline = "middle";
+    ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
   }
 
   async function renderPreview() {
@@ -181,6 +232,5 @@
     renderPreview._t = setTimeout(renderPreview, 100);
   });
 
-  // Init
   renderPreview();
 })();

@@ -103,17 +103,16 @@
   async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
 
-    // === White background ===
+    // Background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
 
-    // === Background image with 70% opacity ===
+    // Background image with opacity
     if (state.bgImage) {
       ctx.save();
       ctx.globalAlpha = 0.7;
 
-      const footerFontSize = 10;
-      const footerHeight = 3 * footerFontSize;
+      const footerHeight = 30;
       const usableHeight = H - footerHeight;
 
       const imgAspect = state.bgImage.width / state.bgImage.height;
@@ -130,51 +129,48 @@
 
       const offsetX = (W - drawW) / 2;
       const offsetY = (usableHeight - drawH) / 2;
-
       ctx.drawImage(state.bgImage, offsetX, offsetY, drawW, drawH);
       ctx.restore();
 
-      // Feathered gradient
-      const gradientHeight = H * 0.4;
-      const grad = ctx.createLinearGradient(0, 0, 0, gradientHeight);
-      grad.addColorStop(0, "rgba(255,255,255,1)");
-      grad.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, gradientHeight);
+      // Top feather gradient
+      const gradHeight = H * 0.4;
+      const gradient = ctx.createLinearGradient(0, 0, 0, gradHeight);
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, W, gradHeight);
     }
 
+    // QR dimensions
     const boxSize = Math.min(W, H) * 0.4;
     const qrSize = boxSize * 0.8;
     const qrPadding = qrSize * 0.1;
-
     const labelFontSize = qrSize * 0.12;
     const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.6;
     const boxX = (W - (qrSize + qrPadding * 2)) / 2;
     const boxY = (H - qrTotalHeight) / 2;
 
-    // === Contest Entry Details ===
+    // Contest title above QR
     if (state.eventInfo) {
       const formattedTitle = toMLATitleCase(state.eventInfo);
       const textSize = qrSize * 0.3;
-      const topMargin = 60;
-      const spaceAboveQR = boxY - topMargin;
       const textHeight = textSize * 1.2;
-      const verticalCenter = topMargin + (spaceAboveQR - textHeight) / 2;
+      const verticalCenter = (boxY - textHeight) / 2;
 
-      drawWrappedText(ctx, formattedTitle, qrSize * 2.5, W / 2, verticalCenter, textSize * 1.2, {
+      drawWrappedText(ctx, formattedTitle, qrSize * 2.5, W / 2, verticalCenter, textHeight, {
         size: textSize,
         weight: "900",
         color: BRAND_COLOR
       });
     }
 
-    // === QR Code Box with "Scan to Enter" inside ===
+    // QR code white box
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
+    // Generate QR
     const qrX = boxX + qrPadding;
     const qrY = boxY + qrPadding;
-
     const qrDataURL = await QRCode.toDataURL(state.url, {
       width: Math.round(qrSize),
       margin: 0,
@@ -190,16 +186,16 @@
 
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
+    // Label under QR
     ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText("Scan to Enter", W / 2, qrY + qrSize + qrPadding * 0.5);
 
-    // === Footer disclaimer ===
+    // Footer disclaimer
     const footerFontSize = 10;
     const footerHeight = 3 * footerFontSize;
-
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, H - footerHeight, W, footerHeight);
 
@@ -215,7 +211,6 @@
     const stage = document.getElementById("preview-stage");
 
     stage.style.aspectRatio = `${dims.w} / ${dims.h}`;
-
     const cssW = stage.clientWidth;
     const cssH = cssW * (dims.h / dims.w);
     const dpr = window.devicePixelRatio || 1;

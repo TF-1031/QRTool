@@ -14,7 +14,6 @@
     url: "https://www.sparklight.com/internet",
     orientation: "portrait",
     bgImage: null,
-    heading: "",
     eventInfo: "",
     disclaimer: DEFAULT_DISCLAIMER,
   };
@@ -24,7 +23,6 @@
 
   const urlIn = document.getElementById("urlInput");
   const eventIn = document.getElementById("eventName");
-  const headingIn = document.getElementById("headingInput");
   const infoIn = document.getElementById("eventInfoInput");
   const disclaimerIn = document.getElementById("disclaimerInput");
   const bgUpload = document.getElementById("bgUpload");
@@ -33,7 +31,6 @@
   const saveBtn = document.getElementById("saveBtn");
   const resetBtn = document.getElementById("resetBtn");
 
-  // === MLA Title Case Formatter ===
   function toMLATitleCase(str) {
     const smallWords = new Set([
       "a", "an", "and", "as", "at", "but", "by", "for", "in", "nor",
@@ -149,35 +146,32 @@
     const boxSize = Math.min(W, H) * 0.4;
     const qrSize = boxSize * 0.8;
     const qrPadding = qrSize * 0.1;
-    const fullBoxSize = qrSize + qrPadding * 2;
 
-    // === Optional heading ===
-    if (state.heading) {
-      drawWrappedText(ctx, state.heading, W * 0.9, W / 2, 20, 20, {
-        size: 20,
-        weight: "600",
-        color: "#1f1f23"
-      });
-    }
+    const labelFontSize = qrSize * 0.12;
+    const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.6;
+    const boxX = (W - (qrSize + qrPadding * 2)) / 2;
+    const boxY = (H - qrTotalHeight) / 2;
 
     // === Contest Entry Details ===
     if (state.eventInfo) {
       const formattedTitle = toMLATitleCase(state.eventInfo);
-      drawWrappedText(ctx, formattedTitle, qrSize * 2.5, W / 2, 60, 32, {
-        size: qrSize * 0.15,
+      const textSize = qrSize * 0.3;
+      const topMargin = 60;
+      const spaceAboveQR = boxY - topMargin;
+      const textHeight = textSize * 1.2;
+      const verticalCenter = topMargin + (spaceAboveQR - textHeight) / 2;
+
+      drawWrappedText(ctx, formattedTitle, qrSize * 2.5, W / 2, verticalCenter, textSize * 1.2, {
+        size: textSize,
         weight: "900",
         color: BRAND_COLOR
       });
     }
 
-    // === QR Code Box ===
-    const boxX = (W - fullBoxSize) / 2;
-    const boxY = (H - fullBoxSize) / 2;
-
+    // === QR Code Box with "Scan to Enter" inside ===
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(boxX, boxY, fullBoxSize, fullBoxSize);
+    ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-    // Draw QR
     const qrX = boxX + qrPadding;
     const qrY = boxY + qrPadding;
 
@@ -196,12 +190,11 @@
 
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-    // === Scan to Enter label ===
-    ctx.font = `bold ${qrSize * 0.14}px ${FONT_STACK}`;
+    ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText("Scan to Enter", W / 2, boxY + fullBoxSize + 8);
+    ctx.fillText("Scan to Enter", W / 2, qrY + qrSize + qrPadding * 0.5);
 
     // === Footer disclaimer ===
     const footerFontSize = 10;
@@ -252,14 +245,12 @@
     pdf.save(sanitizeFilename(state.eventName) + ".pdf");
   }
 
-  // === Debounced live preview ===
   let previewTimer;
   function scheduleRender() {
     clearTimeout(previewTimer);
     previewTimer = setTimeout(() => {
       state.url = urlIn.value.trim() || "https://www.sparklight.com/internet";
       state.eventName = eventIn.value.trim() || "Event";
-      state.heading = headingIn.value.trim();
       state.eventInfo = infoIn.value.trim();
       state.disclaimer = disclaimerIn.value.trim() || DEFAULT_DISCLAIMER;
 
@@ -270,8 +261,7 @@
     }, 200);
   }
 
-  // === Event listeners ===
-  [urlIn, eventIn, headingIn, infoIn, disclaimerIn].forEach(input => {
+  [urlIn, eventIn, infoIn, disclaimerIn].forEach(input => {
     input.addEventListener("input", scheduleRender);
   });
   orientationInputs.forEach(radio => {

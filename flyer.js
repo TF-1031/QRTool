@@ -7,6 +7,7 @@
     "No purchase necessary. Entry open to all eligible participants.\nScan QR Code to see full terms and conditions at the contest link.";
 
   const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+  const BRAND_COLOR = "#8d3b91";
 
   const state = {
     eventName: "Event",
@@ -29,11 +30,8 @@
   const bgUpload = document.getElementById("bgUpload");
   const orientationInputs = document.querySelectorAll("input[name='orientation']");
 
-  const makeQR = document.getElementById("makeQR");
   const saveBtn = document.getElementById("saveBtn");
   const resetBtn = document.getElementById("resetBtn");
-
-  const BRAND_COLOR = "#8d3b91";
 
   function sanitizeFilename(name) {
     return (name || "Event")
@@ -185,22 +183,33 @@
     pdf.save(sanitizeFilename(state.eventName) + ".pdf");
   }
 
-  makeQR.addEventListener("click", async () => {
-    state.url = urlIn.value.trim() || "https://www.sparklight.com/internet";
-    state.eventName = eventIn.value.trim() || "Event";
-    state.heading = headingIn.value.trim();
-    state.eventInfo = infoIn.value.trim();
-    state.disclaimer = disclaimerIn.value.trim() || DEFAULT_DISCLAIMER;
+  // === Debounced preview update ===
+  let previewTimer;
+  function scheduleRender() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => {
+      state.url = urlIn.value.trim() || "https://www.sparklight.com/internet";
+      state.eventName = eventIn.value.trim() || "Event";
+      state.heading = headingIn.value.trim();
+      state.eventInfo = infoIn.value.trim();
+      state.disclaimer = disclaimerIn.value.trim() || DEFAULT_DISCLAIMER;
 
-    const selected = [...orientationInputs].find(r => r.checked);
-    state.orientation = selected?.value || "portrait";
+      const selected = [...orientationInputs].find(r => r.checked);
+      state.orientation = selected?.value || "portrait";
 
-    await renderPreview();
+      renderPreview();
+    }, 200);
+  }
+
+  // === Live preview listeners ===
+  [urlIn, eventIn, headingIn, infoIn, disclaimerIn].forEach(input => {
+    input.addEventListener("input", scheduleRender);
+  });
+  orientationInputs.forEach(radio => {
+    radio.addEventListener("change", scheduleRender);
   });
 
-  saveBtn.addEventListener("click", savePDF);
-  resetBtn.addEventListener("click", () => location.reload());
-
+  // === Background upload ===
   bgUpload.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -212,6 +221,9 @@
       }
     }
   });
+
+  saveBtn.addEventListener("click", savePDF);
+  resetBtn.addEventListener("click", () => location.reload());
 
   window.addEventListener("resize", () => {
     clearTimeout(renderPreview._t);

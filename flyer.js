@@ -68,7 +68,7 @@
   async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
 
-    // === Background image ===
+    // === Background image + feather gradient ===
     if (state.bgImage) {
       ctx.save();
       ctx.globalAlpha = 0.7;
@@ -94,30 +94,41 @@
 
       ctx.drawImage(state.bgImage, offsetX, offsetY, drawW, drawH);
       ctx.restore();
+
+      // === Top feather gradient overlay ===
+      const gradientHeight = H * 0.4;
+      const grad = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+      grad.addColorStop(0, "rgba(255,255,255,1)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, gradientHeight);
     }
 
-    // === Contest Entry Details (H1) ===
+    // === Title (Contest Entry Details) ===
     const boxSize = Math.min(W, H) * 0.4;
-    const h1FontSize = boxSize * 1.2 * 0.08;
+    const titleFontSize = boxSize * 0.25;
+    const titleY = 40;
 
     if (state.eventInfo) {
-      drawText(ctx, state.eventInfo, W / 2, 40, h1FontSize, "900", "center", BRAND_COLOR);
+      drawText(ctx, state.eventInfo, W / 2, titleY, titleFontSize, "900", "center", BRAND_COLOR);
     }
 
-    // === QR Code Box ===
-    const boxX = (W - boxSize) / 2;
-    const boxY = (H - boxSize) / 2;
+    // === QR Code Box with "Scan to Enter" ===
+    const boxWidth = boxSize;
+    const qrSize = boxWidth * 0.85;
+    const scanTextHeight = 24;
+    const qrBoxHeight = qrSize + scanTextHeight + 20;
 
-    // "Scan to Enter" - just above QR
-    drawText(ctx, "Scan to Enter", W / 2, boxY - 26, 18, "bold");
+    const boxX = (W - boxWidth) / 2;
+    const boxY = (H - qrBoxHeight) / 2;
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(boxX, boxY, boxSize, boxSize);
+    ctx.fillRect(boxX, boxY, boxWidth, qrBoxHeight);
     ctx.strokeStyle = "#000";
-    ctx.strokeRect(boxX, boxY, boxSize, boxSize);
+    ctx.strokeRect(boxX, boxY, boxWidth, qrBoxHeight);
 
-    const qrSize = boxSize * 0.92;
-    const qrPad = (boxSize - qrSize) / 2;
+    const qrX = boxX + (boxWidth - qrSize) / 2;
+    const qrY = boxY + 10;
 
     const qrDataURL = await QRCode.toDataURL(state.url, {
       width: Math.round(qrSize),
@@ -132,9 +143,12 @@
       img.src = qrDataURL;
     });
 
-    ctx.drawImage(qrImg, boxX + qrPad, boxY + qrPad, qrSize, qrSize);
+    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-    // === Footer Disclaimer ===
+    // === "Scan to Enter" Inside Box ===
+    drawText(ctx, "Scan to Enter", W / 2, boxY + qrSize + 16, 16, "bold");
+
+    // === Footer Disclaimer Box ===
     const footerFontSize = 10;
     const footerHeight = 3 * footerFontSize;
 
@@ -209,7 +223,6 @@
     radio.addEventListener("change", scheduleRender);
   });
 
-  // === Background upload ===
   bgUpload.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (file) {

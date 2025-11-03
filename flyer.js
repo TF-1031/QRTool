@@ -1,41 +1,35 @@
 (() => {
-  const INCH_W = 8.5, INCH_H = 11, DPI = 300;
-  const PX_W = Math.round(INCH_W * DPI), PX_H = Math.round(INCH_H * DPI);
+  const DPI = 300;
+  const INCH_W = 8.5, INCH_H = 11;
+  const DEFAULT_DISCLAIMER =
+    "No purchase necessary. Entry open to all eligible participants.\nScan QR Code to see full terms and conditions at the contest link.";
 
-  const BOX_IN = 3.16;
-  const BOX_RATIO_W = BOX_IN / INCH_W;
-  const BOX_RATIO_H = BOX_IN / INCH_H;
-  const QR_FILL_RATIO = 0.90;
-
-  const FONT_STACK =
-    `"Effra", "Effra CC", "Segoe UI VSS (Regular)", "Segoe UI",
-     -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
-     Helvetica, Ubuntu, Arial, sans-serif, "Apple Color Emoji",
-     "Segoe UI Emoji", "Segoe UI Symbol"`;
+  const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 
   const state = {
     eventName: "Event",
-    url: "https://www.sparklight.com",
-    bg: null
+    url: "https://your-url.com",
+    orientation: "portrait",
+    bgImage: null,
+    heading: "",
+    eventInfo: "",
+    disclaimer: DEFAULT_DISCLAIMER,
   };
 
   const cnv = document.getElementById("previewCanvas");
   const ctx = cnv.getContext("2d");
+
   const eventIn = document.getElementById("eventName");
-  const urlIn   = document.getElementById("urlInput");
-  const makeQR  = document.getElementById("makeQR");
+  const urlIn = document.getElementById("urlInput");
+  const orientationIn = document.getElementById("orientation");
+  const headingIn = document.getElementById("headingInput");
+  const infoIn = document.getElementById("eventInfoInput");
+  const disclaimerIn = document.getElementById("disclaimerInput");
+  const bgUpload = document.getElementById("bgUpload");
+
+  const makeQR = document.getElementById("makeQR");
   const saveBtn = document.getElementById("saveBtn");
   const resetBtn = document.getElementById("resetBtn");
-
-  function loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
-    });
-  }
 
   function sanitizeFilename(name) {
     return (name || "Event")
@@ -44,45 +38,82 @@
       .replace(/\s+/g, "_");
   }
 
-  async function drawFlyer(ctx, W, H, forPrint = false) {
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function drawText(ctx, text, x, y, size, weight = "normal", align = "center") {
+    ctx.font = `${weight} ${size}px ${FONT_STACK}`;
+    ctx.fillStyle = "#1f1f23";
+    ctx.textAlign = align;
+    ctx.fillText(text, x, y);
+  }
+
+  async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(state.bg, 0, 0, W, H);
+
+    // Draw background image
+    if (state.bgImage) {
+      ctx.globalAlpha = 0.7;
+      const aspect = state.bgImage.width / state.bgImage.height;
+      const targetHeight = W / aspect;
+      ctx.drawImage(state.bgImage, 0, (H - targetHeight) / 2, W, targetHeight);
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Heading
+    if (state.heading) {
+      drawText(ctx, state.heading, W / 2, 60, 28, "bold");
+    }
 
     // White QR box
-    const boxW = BOX_RATIO_W * W;
-    const boxH = BOX_RATIO_H * H;
-    const x = (W - boxW) / 2;
-    const y = (H - boxH) / 2;
+    const boxSize = Math.min(W, H) * 0.5;
+    const boxX = (W - boxSize) / 2;
+    const boxY = (H - boxSize) / 2;
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x, y, boxW, boxH);
-    ctx.lineWidth = 1;
+    ctx.fillRect(boxX, boxY, boxSize, boxSize);
     ctx.strokeStyle = "#000";
-    ctx.strokeRect(x, y, boxW, boxH);
+    ctx.strokeRect(boxX, boxY, boxSize, boxSize);
 
-    // QR code inside the box
-    const inner = Math.min(boxW, boxH) * QR_FILL_RATIO;
-    const pad = (Math.min(boxW, boxH) - inner) / 2;
+    // QR Code
+    const qrSize = boxSize * 0.92;
+    const qrPad = (boxSize - qrSize) / 2;
 
     const qrDataURL = await QRCode.toDataURL(state.url, {
-      width: Math.round(inner),
+      width: Math.round(qrSize),
       margin: 0,
       color: { dark: "#000000", light: "#ffffff" }
     });
-    const qrImg = await loadImage(qrDataURL);
-    ctx.drawImage(qrImg, x + pad, y + pad, inner, inner);
 
-    // Event name at bottom center
-    if (forPrint) {
-      const fontPx = Math.round((6 / 72) * DPI);
-      ctx.font = `italic 300 ${fontPx}px ${FONT_STACK}`;
-    } else {
-      ctx.font = `italic 300 11px ${FONT_STACK}`;
-    }
-    ctx.fillStyle = "#666";
+    const qrImg = new Image();
+    await new Promise((res, rej) => {
+      qrImg.onload = res;
+      qrImg.onerror = rej;
+      qrImg.src = qrDataURL;
+    });
+
+    ctx.drawImage(qrImg, boxX + qrPad, boxY + qrPad, qrSize, qrSize);
+
+    // Event Info / default "Scan to Enter"
+    const infoText = state.eventInfo || "Scan to Enter";
+    drawText(ctx, infoText, W / 2, boxY + boxSize + 30, 18, "normal");
+
+    // Disclaimer inside white box
+    const disclaimerY = boxY + boxSize - 8;
+    ctx.font = `italic 12px ${FONT_STACK}`;
+    ctx.fillStyle = "#444";
     ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillText(state.eventName, W / 2, H - 5);
+    ctx.fillText(state.disclaimer, W / 2, disclaimerY);
   }
 
   async function renderPreview() {
@@ -95,53 +126,61 @@
     cnv.height = Math.round(cssH * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await drawFlyer(ctx, cssW, cssH, false);
+    await drawFlyer(ctx, cssW, cssH);
   }
 
   async function savePDF() {
-    const off = document.createElement("canvas");
-    off.width = PX_W; off.height = PX_H;
-    const offCtx = off.getContext("2d");
-    await drawFlyer(offCtx, PX_W, PX_H, true);
+    const orientation = state.orientation === "landscape" ? "l" : "p";
+    const pdfW = orientation === "l" ? INCH_H : INCH_W;
+    const pdfH = orientation === "l" ? INCH_W : INCH_H;
+
+    const pxW = Math.round(pdfW * DPI);
+    const pxH = Math.round(pdfH * DPI);
+
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = pxW;
+    offCanvas.height = pxH;
+    const offCtx = offCanvas.getContext("2d");
+
+    await drawFlyer(offCtx, pxW, pxH);
 
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "in", [INCH_W, INCH_H]);
-    pdf.addImage(off.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, INCH_W, INCH_H);
+    const pdf = new jsPDF(orientation, "in", [pdfW, pdfH]);
+    pdf.addImage(offCanvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, pdfW, pdfH);
     pdf.save(sanitizeFilename(state.eventName) + ".pdf");
   }
 
-  // ✅ Generate button
   makeQR.addEventListener("click", async () => {
-    state.eventName = (eventIn.value || "Event").trim();
-    state.url = (urlIn.value || "https://www.sparklight.com").trim();
-
-    // 🔊 Play Miami.mp3 only if event name includes "Miami"
-    if (state.eventName.toLowerCase().includes("miami")) {
-      const sound = document.getElementById("convertSound");
-      if (sound) {
-        try {
-          sound.currentTime = 0;
-          sound.play();
-        } catch (e) {
-          console.warn("Audio playback blocked by browser", e);
-        }
-      }
-    }
+    state.eventName = eventIn.value.trim() || "Event";
+    state.url = urlIn.value.trim() || "https://your-url.com";
+    state.orientation = orientationIn.value;
+    state.heading = headingIn.value.trim();
+    state.eventInfo = infoIn.value.trim();
+    state.disclaimer = disclaimerIn.value.trim() || DEFAULT_DISCLAIMER;
 
     await renderPreview();
   });
 
-  // ✅ Save & Reset
   saveBtn.addEventListener("click", savePDF);
   resetBtn.addEventListener("click", () => location.reload());
 
-  // ✅ Initial background load
-  (async () => {
-    state.bg = await loadImage("EVENT-QR-WHT.jpg");
-    await renderPreview();
-    window.addEventListener("resize", () => {
-      clearTimeout(renderPreview._t);
-      renderPreview._t = setTimeout(renderPreview, 100);
-    });
-  })();
+  bgUpload.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        state.bgImage = await loadImageFromFile(file);
+        await renderPreview();
+      } catch (err) {
+        alert("Failed to load image");
+      }
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    clearTimeout(renderPreview._t);
+    renderPreview._t = setTimeout(renderPreview, 100);
+  });
+
+  // Init
+  renderPreview();
 })();

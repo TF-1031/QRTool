@@ -2,34 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Jose's Event Flyer Generator</title>
+  <title>Flyer Generator v2.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="flyer.css" />
-  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <h2>Jose's Event Flyer Generator</h2>
+  <h2>Flyer Generator 2.0</h2>
 
   <div class="row">
-    <input id="eventName" type="text" placeholder="Event" value="Event" />
-    <input id="urlInput" type="url" placeholder="https://www.sparklight.com" value="https://www.sparklight.com" />
-    <button id="makeQR" class="btn">Generate QR</button>
+    <input id="eventName" type="text" placeholder="Event Name" value="Event" />
+    <input id="urlInput" type="url" placeholder="https://your-url.com" value="https://your-url.com" />
   </div>
 
-  <!-- Flyer Preview -->
+  <div class="row">
+    <select id="orientation">
+      <option value="portrait">Portrait (8.5x11)</option>
+      <option value="landscape">Landscape (11x8.5)</option>
+    </select>
+    <input id="bgUpload" type="file" accept="image/*" />
+  </div>
+
+  <div class="row">
+    <input id="headingInput" type="text" placeholder="Optional Heading (H2 above QR)" />
+    <input id="eventInfoInput" type="text" placeholder="Event Information (replaces 'Scan to Enter')" />
+  </div>
+
+  <div class="row">
+    <textarea id="disclaimerInput" placeholder="Disclaimer text... (optional)"></textarea>
+  </div>
+
+  <div class="row">
+    <button id="makeQR" class="btn">Generate Flyer</button>
+    <button id="saveBtn" class="btn">Save PDF</button>
+    <button id="resetBtn" class="btn">Reset</button>
+  </div>
+
   <div id="preview-stage">
     <canvas id="previewCanvas" aria-label="Flyer preview"></canvas>
   </div>
 
-  <div id="actions">
-    <button id="saveBtn" class="btn">Save</button>
-    <button id="resetBtn" class="btn">Reset</button>
-  </div>
-
   <script src="flyer.js"></script>
-<audio id="convertSound" src="Miami.mp3" preload="auto"></audio>
 </body>
 </html>
-

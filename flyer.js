@@ -116,11 +116,11 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
-  // Background white
+  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Draw image if available
+  // Background Image
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
     const canvasAspect = W / H;
@@ -149,6 +149,77 @@ async function drawFlyer() {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, W, gradientHeight);
   }
+
+  // Title Block
+  const qrSize = W * 0.25;
+  const qrPadding = qrSize * 0.10;
+  const labelFontSize = qrSize * 0.08;
+  const maxTitleWidth = qrSize * 2.5;
+  const fontSize = qrSize * 0.26;
+
+  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+  ctx.fillStyle = BRAND_COLOR;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  const lines = wrapText(ctx, state.contestDetails, maxTitleWidth);
+  const lineSpacing = fontSize * 0.90;
+  const blockHeight = lines.length * lineSpacing;
+  const titleY = 40; // half the previous padding
+  lines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, titleY + i * lineSpacing);
+  });
+
+  // Calculate Y for QR below title
+  const qrTopY = titleY + blockHeight + 30;
+  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
+
+  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
+  const boxY = qrTopY;
+
+  // QR White Box
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
+
+  // QR Code
+  const qrDataURL = await QRCode.toDataURL(state.url, {
+    width: Math.round(qrSize),
+    margin: 0,
+    color: { dark: "#000000", light: "#ffffff" }
+  });
+  const qrImg = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = qrDataURL;
+  });
+
+  const qrX = boxX + qrPadding;
+  const qrY = boxY + qrPadding;
+  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+  // Label under QR
+  const labelY = qrY + qrSize + 10;
+  ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
+  ctx.fillStyle = "#000000";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("Scan to Enter", W / 2, labelY);
+
+  // Disclaimer
+  const footerFontSize = 10;
+  const footerHeight = footerFontSize * 3;
+  const footerTop = H - footerHeight;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, footerTop, W, footerHeight);
+
+  ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
+  ctx.fillStyle = "#333";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
+}
 
   // QR Box parameters
   const qrSize = W * 0.25;
@@ -244,4 +315,5 @@ function wrapText(context, text, maxWidth) {
 // Initial draw
 updateStateFromInputs();
 drawFlyer();
+
 

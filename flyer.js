@@ -16,10 +16,20 @@ const state = {
 const FONT_STACK = "Arial, sans-serif";
 const PURPLE = "#8d3b91";
 
-function titleCase(str) {
-  return str.replace(/\w\S*/g, (txt) => {
-    return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
-  });
+function mlaTitleCase(input) {
+  const lowercaseWords = new Set([
+    "a", "an", "the", "and", "but", "or", "nor", "for", "so", "yet",
+    "at", "by", "in", "of", "on", "to", "up", "with", "as"
+  ]);
+  return input
+    .split(/\s+/)
+    .map((word, idx) => {
+      if (word === word.toUpperCase()) return word; // preserve acronyms
+      const lower = word.toLowerCase();
+      if (idx > 0 && lowercaseWords.has(lower)) return lower;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" ");
 }
 
 function updateStateFromInputs() {
@@ -27,7 +37,7 @@ function updateStateFromInputs() {
     'input[name="orientation"]:checked'
   ).value;
   state.eventName = document.getElementById("eventName").value;
-  state.contestDetails = titleCase(
+  state.contestDetails = mlaTitleCase(
     document.getElementById("contestDetails").value.trim()
   );
   state.url = document.getElementById("url").value;
@@ -68,11 +78,25 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   drawFlyer();
 });
 
-document.getElementById("saveBtn").addEventListener("click", () => {
-  const link = document.createElement("a");
-  link.download = "flyer.jpg"; // Correct file extension
-  link.href = canvas.toDataURL("image/jpeg", 0.92);
-  link.click();
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const format = document.getElementById("downloadFormat").value;
+
+  if (format === "jpg") {
+    const link = document.createElement("a");
+    link.download = "flyer.jpg";
+    link.href = canvas.toDataURL("image/jpeg", 0.92);
+    link.click();
+  } else if (format === "pdf") {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: state.orientation,
+      unit: "pt",
+      format: [canvas.width, canvas.height]
+    });
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+    pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
+    pdf.save("flyer.pdf");
+  }
 });
 
 async function drawFlyer() {
@@ -124,27 +148,28 @@ async function drawFlyer() {
   const boxX = (W - qrSize - qrPadding * 2) / 2;
   const boxY = (H - qrTotalHeight) / 2;
 
-  // Title Text
-  const textSize = qrSize * 0.26;
-  ctx.font = `bold ${textSize}px ${FONT_STACK}`;
+  const fontSize = qrSize * 0.26;
+  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
   ctx.fillStyle = PURPLE;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
 
-  const textLines = state.contestDetails.split("\n");
-  const lineSpacing = textSize * 1.05;
-  const totalTextHeight = lineSpacing * textLines.length;
-  const centerY = boxY / 2 + totalTextHeight / 3;
+  const lines = state.contestDetails.split("\n");
+  const lineSpacing = fontSize * 0.95;
+  const totalTextHeight = lines.length * lineSpacing;
+  const centerY = boxY / 2;
 
-  textLines.forEach((line, i) => {
-    ctx.fillText(line, W / 2, centerY - totalTextHeight / 2 + i * lineSpacing);
+  lines.forEach((line, i) => {
+    ctx.fillText(
+      line,
+      W / 2,
+      centerY - totalTextHeight / 2 + i * lineSpacing
+    );
   });
 
-  // QR white box
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-  // QR code
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
@@ -162,7 +187,6 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Label
   const labelY = qrY + qrSize + qrPadding * 0.3;
   ctx.font = `bold ${labelFontSize * 0.85}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
@@ -170,7 +194,6 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
 
-  // Footer disclaimer
   const footerFontSize = 10;
   const footerHeight = 3 * footerFontSize;
   const footerMarginTop = 20;
@@ -185,6 +208,5 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-// Initial load
 updateStateFromInputs();
 drawFlyer();

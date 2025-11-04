@@ -73,6 +73,14 @@ input[type="file"] {
   border-radius: 6px;
 }
 
+select#downloadFormat {
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  background: #fff;
+}
+
 .buttons {
   display: flex;
   gap: 12px;

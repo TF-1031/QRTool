@@ -12,44 +12,48 @@ body {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #f5f5f7;
   color: #1f1f23;
-  text-align: center;
 }
 
 h2 {
   margin: 0 0 12px;
   font-size: 22px;
   font-weight: 700;
+  text-align: center;
+  color: var(--brand);
 }
 
-.form-columns {
+form {
+  max-width: 1000px;
+  margin: 0 auto 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.row {
   display: flex;
-  flex-direction: row;
-  gap: 2rem;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.left-column,
-.right-column {
-  flex: 1;
+.col {
+  flex: 1 1 0;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
-textarea#disclaimer {
-  font-size: 0.9rem;
-  font-family: Arial, sans-serif;
-  width: 100%;
-  height: 6rem;
-  resize: vertical;
-  padding: 0.5rem;
-  box-sizing: border-box;
+label {
+  font-weight: bold;
+  color: #333;
 }
 
 input[type="text"],
 input[type="url"],
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 10px 12px;
   font-size: 16px;
@@ -58,14 +62,22 @@ textarea {
 }
 
 textarea {
-  min-height: 100px;
   resize: vertical;
+  min-height: 100px;
 }
 
-.buttons-row {
+input[type="file"] {
+  padding: 5px;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.buttons {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
 
 .btn {
@@ -73,26 +85,28 @@ textarea {
   color: #fff;
   border: 0;
   border-radius: 999px;
-  padding: 12px 18px;
+  padding: 12px 20px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease-in-out;
 }
 
 .btn:hover {
-  filter: brightness(0.95);
+  background: #762d7d;
 }
 
 #preview-stage {
   width: min(860px, 92vw);
-  margin: 0 auto;
-  border: 1px solid #ddd;
+  aspect-ratio: 8.5 / 11;
+  margin: 20px auto;
   border-radius: 6px;
   background: #fff;
+  box-shadow: 0 0 0 1px #ddd;
   overflow: hidden;
 }
 
-#previewCanvas {
+#flyerCanvas {
   width: 100%;
   height: auto;
   display: block;

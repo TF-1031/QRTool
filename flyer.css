@@ -3,7 +3,7 @@
 }
 
 * {
-  box-sizing: border-box;
+  box‑sizing: border-box;
 }
 
 body {
@@ -21,29 +21,42 @@ h2 {
   font-weight: 700;
 }
 
-.row {
+.form‑container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 20px;
   justify-content: center;
-  margin: 10px 0 16px;
+  margin-bottom: 20px;
+}
+
+.left‑col, .right‑col {
+  flex: 1 1 300px;
+  max-width: 400px;
+}
+
+.row {
+  margin-bottom: 12px;
 }
 
 input[type="text"],
 input[type="url"],
-select,
 textarea {
+  width: 100%;
   padding: 10px 12px;
   font-size: 16px;
   border: 1px solid #c9c9cf;
   border-radius: 8px;
-  min-width: 260px;
 }
 
 textarea {
-  min-height: 60px;
-  width: 100%;
-  max-width: 600px;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.buttons‑row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
 
 .btn {
@@ -56,14 +69,14 @@ textarea {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn:hover {
   filter: brightness(0.95);
 }
 
-#preview-stage {
+#preview‑stage {
   width: min(860px, 92vw);
-  aspect-ratio: 8.5 / 11;
-  margin: 0 auto 12px;
+  margin: 0 auto;
   border: 1px solid #ddd;
   border-radius: 6px;
   background: #fff;
@@ -72,6 +85,6 @@ textarea {
 
 #previewCanvas {
   width: 100%;
-  height: 100%;
+  height: auto;
   display: block;
 }

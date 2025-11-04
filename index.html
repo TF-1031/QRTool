@@ -11,41 +11,36 @@
 <body>
   <h2>Flyer Generator</h2>
 
-  <div class="row">
-    <input id="urlInput" type="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" />
-  </div>
+  <div class="form‑container">
+    <div class="left‑col">
+      <div class="row">
+        <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
+        <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
+      </div>
+      <div class="row"><input id="eventName" type="text" placeholder="Event Name" /></div>
+      <div class="row"><input id="eventInfoInput" type="text" placeholder="Contest Entry Details" /></div>
+      <div class="row"><input id="urlInput" type="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" /></div>
+    </div>
 
-  <div class="row">
-    <input id="eventName" type="text" placeholder="Event Name" />
-  </div>
-
-  <div class="row">
-    <input id="eventInfoInput" type="text" placeholder="Contest Entry Details" />
-  </div>
-
-  <div class="row">
-    <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
-    <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
-  </div>
-
-  <div class="row">
-    <textarea id="disclaimerInput">No purchase necessary. Entry open to all eligible participants.
+    <div class="right‑col">
+      <div class="row">
+        <textarea id="disclaimerInput" placeholder="Disclaimer...">No purchase necessary. Entry open to all eligible participants.
 Scan QR Code to see full terms and conditions at the contest link.</textarea>
+      </div>
+      <div class="row"><input id="bgUpload" type="file" accept="image/*" /></div>
+      <div class="row buttons‑row">
+        <button id="saveBtn" class="btn">Save PDF</button>
+        <button id="resetBtn" class="btn">Reset</button>
+      </div>
+    </div>
   </div>
 
-  <div class="row">
-    <input id="bgUpload" type="file" accept="image/*" />
-  </div>
-
-  <div class="row">
-    <button id="saveBtn" class="btn">Save PDF</button>
-    <button id="resetBtn" class="btn">Reset</button>
-  </div>
-
-  <div id="preview-stage">
+  <div id="preview‑stage">
     <canvas id="previewCanvas" aria-label="Flyer preview"></canvas>
   </div>
 
   <script src="flyer.js"></script>
 </body>
 </html>
+
+

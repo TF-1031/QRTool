@@ -3,7 +3,7 @@
 }
 
 * {
-  box‑sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
@@ -21,21 +21,30 @@ h2 {
   font-weight: 700;
 }
 
-.form‑container {
+.form-columns {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  margin-bottom: 20px;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
 
-.left‑col, .right‑col {
-  flex: 1 1 300px;
-  max-width: 400px;
+.left-column,
+.right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.row {
-  margin-bottom: 12px;
+textarea#disclaimer {
+  font-size: 0.9rem;
+  font-family: Arial, sans-serif;
+  width: 100%;
+  height: 6rem;
+  resize: vertical;
+  padding: 0.5rem;
+  box-sizing: border-box;
 }
 
 input[type="text"],
@@ -53,7 +62,7 @@ textarea {
   resize: vertical;
 }
 
-.buttons‑row {
+.buttons-row {
   display: flex;
   gap: 10px;
   justify-content: center;
@@ -74,7 +83,7 @@ textarea {
   filter: brightness(0.95);
 }
 
-#preview‑stage {
+#preview-stage {
   width: min(860px, 92vw);
   margin: 0 auto;
   border: 1px solid #ddd;

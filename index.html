@@ -3,46 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flyer Builder</title>
-  <link rel="stylesheet" href="flyer.css" />
+  <title>Flyer Generator</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="flyer.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <h2>Flyer Creator</h2>
+  <h2>Flyer Generator</h2>
+
   <form id="flyerForm">
-    <div class="row">
-      <div class="col">
-        <label for="url">Landing Page URL</label>
-        <input type="url" id="url" value="https://www.sparklight.com/internet" />
-
-        <label for="eventName">Event Name</label>
-        <input type="text" id="eventName" placeholder="Enter event name" />
-
-        <label for="contestDetails">Contest Entry Details</label>
-        <textarea id="contestDetails" placeholder="Win a Trip to the Bahamas!"></textarea>
-
-        <label>Orientation</label>
+    <div class="form-columns">
+      <!-- Left Column -->
+      <div class="left-column">
         <div>
+          <label>Orientation:</label><br />
           <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
           <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
         </div>
 
-        <label for="imageUpload">Upload Background Image</label>
+        <input type="text" id="eventName" placeholder="Event Name" />
+        <input type="text" id="contestDetails" placeholder="Contest Entry Details" />
+        <input type="url" id="url" value="https://www.sparklight.com/internet" placeholder="Contest URL" />
+
         <input type="file" id="imageUpload" accept="image/*" />
-      </div>
 
-      <div class="col">
-        <label for="disclaimer">Disclaimer</label>
-        <textarea id="disclaimer">No purchase necessary. Entry open to all eligible participants.
-Scan QR Code to see full terms and conditions at the contest link.</textarea>
-
-        <div class="buttons">
-          <select id="downloadFormat">
-            <option value="jpg">JPG</option>
-            <option value="pdf">PDF</option>
-          </select>
-          <button type="button" class="btn" id="saveBtn">Download Flyer</button>
+        <div class="buttons-row">
+          <button type="button" class="btn" id="saveBtn">Save PDF & JPG</button>
           <button type="button" class="btn" id="resetBtn">Reset</button>
         </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="right-column">
+        <textarea id="disclaimer">
+No purchase necessary. Entry open to all eligible participants.
+Scan QR Code to see full terms and conditions at the contest link.
+        </textarea>
       </div>
     </div>
   </form>
@@ -50,8 +46,5 @@ Scan QR Code to see full terms and conditions at the contest link.</textarea>
   <div id="preview-stage">
     <canvas id="flyerCanvas"></canvas>
   </div>
-
-  <script type="module" src="flyer.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>

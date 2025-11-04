@@ -13,39 +13,38 @@ const state = {
   image: null,
 };
 
-const FONT_STACK = "Arial, sans-serif";
-const PURPLE = "#8d3b91";
+const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+const BRAND_COLOR = "#8d3b91";
 
 function mlaTitleCase(input) {
-  const lowercaseWords = new Set([
-    "a", "an", "the", "and", "but", "or", "nor", "for", "so", "yet",
-    "at", "by", "in", "of", "on", "to", "up", "with", "as"
+  const smallWords = new Set([
+    "a","an","and","as","at","but","by","for","in","nor","of","on","or","so","the","to","up","yet","with"
   ]);
-  return input
-    .split(/\s+/)
-    .map((word, idx) => {
-      if (word === word.toUpperCase()) return word; // preserve acronyms
-      const lower = word.toLowerCase();
-      if (idx > 0 && lowercaseWords.has(lower)) return lower;
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(" ");
+  const words = input.split(/\s+/);
+  return words.map((word, idx) => {
+    if (word === word.toUpperCase()) {
+      // user typed an acronym/all‑caps like TV
+      return word;
+    }
+    const lower = word.toLowerCase();
+    const isFirstOrLast = (idx === 0) || (idx === words.length - 1);
+    if (smallWords.has(lower) && !isFirstOrLast) {
+      return lower;
+    }
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(" ");
 }
 
 function updateStateFromInputs() {
-  state.orientation = document.querySelector(
-    'input[name="orientation"]:checked'
-  ).value;
-  state.eventName = document.getElementById("eventName").value;
-  state.contestDetails = mlaTitleCase(
-    document.getElementById("contestDetails").value.trim()
-  );
-  state.url = document.getElementById("url").value;
-  state.disclaimer = document.getElementById("disclaimer").value;
+  state.orientation = document.querySelector('input[name="orientation"]:checked').value;
+  state.eventName = document.getElementById("eventName").value.trim();
+  state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
+  state.url = document.getElementById("url").value.trim();
+  state.disclaimer = document.getElementById("disclaimer").value.trim() || state.disclaimer;
 }
 
-document.querySelectorAll("input, textarea").forEach((input) => {
-  input.addEventListener("input", async () => {
+document.querySelectorAll("input, textarea, select").forEach((el) => {
+  el.addEventListener("input", async () => {
     updateStateFromInputs();
     await drawFlyer();
   });
@@ -80,7 +79,6 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const format = document.getElementById("downloadFormat").value;
-
   if (format === "jpg") {
     const link = document.createElement("a");
     link.download = "flyer.jpg";
@@ -88,13 +86,14 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     link.click();
   } else if (format === "pdf") {
     const { jsPDF } = window.jspdf;
+    const dims = { w: canvas.width, h: canvas.height };
     const pdf = new jsPDF({
-      orientation: state.orientation,
+      orientation: state.orientation === "portrait" ? "p" : "l",
       unit: "pt",
-      format: [canvas.width, canvas.height]
+      format: [dims.w, dims.h]
     });
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
+    pdf.addImage(imgData, "JPEG", 0, 0, dims.w, dims.h);
     pdf.save("flyer.pdf");
   }
 });
@@ -105,34 +104,33 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
+  // White background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
+  // Background Image
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
-    const canvasAspect = W / (H - 40);
+    const canvasAspect = W / (H - 60);
     let drawWidth, drawHeight, offsetX, offsetY;
 
     if (imgAspect > canvasAspect) {
-      drawHeight = H;
-      drawWidth = H * imgAspect;
+      drawHeight = H - 60;
+      drawWidth = imgAspect * drawHeight;
       offsetX = (W - drawWidth) / 2;
       offsetY = 0;
     } else {
       drawWidth = W;
-      drawHeight = W / imgAspect;
+      drawHeight = drawWidth / imgAspect;
       offsetX = 0;
-      offsetY = (H - drawHeight) / 2;
+      offsetY = ((H - 60) - drawHeight) / 2;
     }
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
 
     ctx.globalAlpha = 0.7;
     ctx.drawImage(state.image, offsetX, offsetY, drawWidth, drawHeight);
     ctx.globalAlpha = 1.0;
 
-    const gradientHeight = H * 0.45;
+    const gradientHeight = (H - 60) * 0.4;
     const gradient = ctx.createLinearGradient(0, 0, 0, gradientHeight);
     gradient.addColorStop(0, "rgba(255,255,255,1)");
     gradient.addColorStop(1, "rgba(255,255,255,0)");
@@ -140,42 +138,42 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  const qrSize = W * 0.25;
-  const qrPadding = qrSize * 0.1;
-  const labelFontSize = qrSize * 0.07;
-
+  // QR Box calculations
+  const qrSize = W * 0.30;
+  const qrPadding = qrSize * 0.10;
+  const labelFontSize = qrSize * 0.08;
   const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
-  const boxX = (W - qrSize - qrPadding * 2) / 2;
-  const boxY = (H - qrTotalHeight) / 2;
+  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
+  const boxY = (H - 60 - qrTotalHeight) / 2;
 
-  const fontSize = qrSize * 0.26;
-  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = PURPLE;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "bottom";
+  // Contest Entry Details title
+  if (state.contestDetails) {
+    const fontSize = qrSize * 0.26;
+    ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+    ctx.fillStyle = BRAND_COLOR;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
 
-  const lines = state.contestDetails.split("\n");
-  const lineSpacing = fontSize * 0.95;
-  const totalTextHeight = lines.length * lineSpacing;
-  const centerY = boxY / 2;
+    const wrappedLines = wrapText(ctx, state.contestDetails, qrSize * 2.5);
+    const lineHeight = fontSize * 0.95;
+    const blockHeight = wrappedLines.length * lineHeight;
+    const startY = boxY / 2 - (blockHeight / 2);
 
-  lines.forEach((line, i) => {
-    ctx.fillText(
-      line,
-      W / 2,
-      centerY - totalTextHeight / 2 + i * lineSpacing
-    );
-  });
+    wrappedLines.forEach((line, i) => {
+      ctx.fillText(line, W / 2, startY + i * lineHeight);
+    });
+  }
 
+  // Draw QR white box
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
+  // Generate QR
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
-    color: { dark: "#000000", light: "#ffffff" },
+    color: { dark: "#000000", light: "#ffffff" }
   });
-
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -187,6 +185,7 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
+  // "Scan to Enter" label
   const labelY = qrY + qrSize + qrPadding * 0.3;
   ctx.font = `bold ${labelFontSize * 0.85}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
@@ -194,6 +193,7 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
 
+  // Footer disclaimer
   const footerFontSize = 10;
   const footerHeight = 3 * footerFontSize;
   const footerMarginTop = 20;
@@ -208,5 +208,25 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
+// Wrap‑text helper
+function wrapText(context, text, maxWidth) {
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + " ";
+    const metrics = context.measureText(testLine);
+    if (metrics.width > maxWidth && i > 0) {
+      lines.push(line.trim());
+      line = words[i] + " ";
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line.trim());
+  return lines;
+}
+
+// Initial setup
 updateStateFromInputs();
 drawFlyer();

@@ -13,26 +13,21 @@ const state = {
   image: null,
 };
 
-const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-const BRAND_COLOR = "#8d3b91";
+const FONT_STACK = "Arial, sans-serif";
+const PURPLE = "#8d3b91";
 
-function mlaTitleCase(input) {
-  const smallWords = new Set([
-    "a","an","and","as","at","but","by","for","in","nor","of","on","or","so","the","to","up","yet","with"
-  ]);
-  const words = input.split(/\s+/);
-  return words.map((word, idx) => {
-    if (word === word.toUpperCase()) {
-      // user typed an acronym/all‑caps like TV
-      return word;
-    }
-    const lower = word.toLowerCase();
-    const isFirstOrLast = (idx === 0) || (idx === words.length - 1);
-    if (smallWords.has(lower) && !isFirstOrLast) {
-      return lower;
-    }
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
-  }).join(" ");
+// MLA-style title case, except for manually capitalized words (like TV)
+function mlaTitleCase(text) {
+  const smallWords = ["a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "from", "by", "of"];
+  return text
+    .split(" ")
+    .map((word, i) => {
+      if (word === word.toUpperCase()) return word; // preserve ALL CAPS (like TV)
+      const lower = word.toLowerCase();
+      if (i !== 0 && smallWords.includes(lower)) return lower;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" ");
 }
 
 function updateStateFromInputs() {
@@ -40,11 +35,11 @@ function updateStateFromInputs() {
   state.eventName = document.getElementById("eventName").value.trim();
   state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
   state.url = document.getElementById("url").value.trim();
-  state.disclaimer = document.getElementById("disclaimer").value.trim() || state.disclaimer;
+  state.disclaimer = document.getElementById("disclaimer").value.trim();
 }
 
-document.querySelectorAll("input, textarea, select").forEach((el) => {
-  el.addEventListener("input", async () => {
+document.querySelectorAll("input, textarea").forEach((input) => {
+  input.addEventListener("input", async () => {
     updateStateFromInputs();
     await drawFlyer();
   });
@@ -77,25 +72,24 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   drawFlyer();
 });
 
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const format = document.getElementById("downloadFormat").value;
-  if (format === "jpg") {
-    const link = document.createElement("a");
-    link.download = "flyer.jpg";
-    link.href = canvas.toDataURL("image/jpeg", 0.92);
-    link.click();
-  } else if (format === "pdf") {
-    const { jsPDF } = window.jspdf;
-    const dims = { w: canvas.width, h: canvas.height };
-    const pdf = new jsPDF({
-      orientation: state.orientation === "portrait" ? "p" : "l",
-      unit: "pt",
-      format: [dims.w, dims.h]
-    });
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    pdf.addImage(imgData, "JPEG", 0, 0, dims.w, dims.h);
-    pdf.save("flyer.pdf");
-  }
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const fileBase = state.eventName.trim() || "flyer";
+  const safeName = fileBase.replace(/\s+/g, "_");
+
+  // Save as JPG
+  const jpgLink = document.createElement("a");
+  jpgLink.download = `${safeName}.jpg`;
+  jpgLink.href = canvas.toDataURL("image/jpeg");
+  jpgLink.click();
+
+  // Save as PDF
+  const pdf = new jsPDF({
+    orientation: state.orientation,
+    unit: "pt",
+    format: [canvas.width, canvas.height],
+  });
+  pdf.addImage(canvas.toDataURL("image/jpeg"), "JPEG", 0, 0, canvas.width, canvas.height);
+  pdf.save(`${safeName}.pdf`);
 });
 
 async function drawFlyer() {
@@ -104,33 +98,36 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
-  // White background
+  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background Image
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
-    const canvasAspect = W / (H - 60);
+    const canvasAspect = W / H;
     let drawWidth, drawHeight, offsetX, offsetY;
 
     if (imgAspect > canvasAspect) {
-      drawHeight = H - 60;
-      drawWidth = imgAspect * drawHeight;
+      drawHeight = H;
+      drawWidth = H * imgAspect;
       offsetX = (W - drawWidth) / 2;
       offsetY = 0;
     } else {
       drawWidth = W;
-      drawHeight = drawWidth / imgAspect;
+      drawHeight = W / imgAspect;
       offsetX = 0;
-      offsetY = ((H - 60) - drawHeight) / 2;
+      offsetY = (H - drawHeight) / 2;
     }
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, W, H);
 
     ctx.globalAlpha = 0.7;
     ctx.drawImage(state.image, offsetX, offsetY, drawWidth, drawHeight);
     ctx.globalAlpha = 1.0;
 
-    const gradientHeight = (H - 60) * 0.4;
+    // Feathered top gradient
+    const gradientHeight = H * 0.4;
     const gradient = ctx.createLinearGradient(0, 0, 0, gradientHeight);
     gradient.addColorStop(0, "rgba(255,255,255,1)");
     gradient.addColorStop(1, "rgba(255,255,255,0)");
@@ -138,41 +135,55 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  // QR Box calculations
-  const qrSize = W * 0.30;
-  const qrPadding = qrSize * 0.10;
-  const labelFontSize = qrSize * 0.08;
+  // QR code specs
+  const qrSize = W * 0.25;
+  const qrPadding = qrSize * 0.1;
+  const labelFontSize = qrSize * 0.07;
   const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
-  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = (H - 60 - qrTotalHeight) / 2;
+  const boxX = (W - qrSize - qrPadding * 2) / 2;
+  const boxY = (H - qrTotalHeight) / 2;
 
-  // Contest Entry Details title
-  if (state.contestDetails) {
-    const fontSize = qrSize * 0.26;
-    ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-    ctx.fillStyle = BRAND_COLOR;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+  // Contest Title (2.5x QR box width)
+  const maxTextWidth = qrSize * 2.5;
+  const fontSize = qrSize * 0.25;
+  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+  ctx.fillStyle = PURPLE;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
 
-    const wrappedLines = wrapText(ctx, state.contestDetails, qrSize * 2.5);
-    const lineHeight = fontSize * 0.95;
-    const blockHeight = wrappedLines.length * lineHeight;
-    const startY = boxY / 2 - (blockHeight / 2);
+  const lines = [];
+  const words = state.contestDetails.split(" ");
+  let currentLine = "";
 
-    wrappedLines.forEach((line, i) => {
-      ctx.fillText(line, W / 2, startY + i * lineHeight);
-    });
-  }
+  words.forEach((word) => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
+    if (testWidth > maxTextWidth) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  });
+  if (currentLine) lines.push(currentLine);
 
-  // Draw QR white box
-  ctx.fillStyle = "#ffffff";
+  const spacing = fontSize * 1.05;
+  const totalHeight = spacing * lines.length;
+  const top = boxY / 2 + totalHeight / 3;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, top - totalHeight / 2 + i * spacing);
+  });
+
+  // QR White Box
+  ctx.fillStyle = "#fff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-  // Generate QR
+  // QR code itself
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
-    color: { dark: "#000000", light: "#ffffff" }
+    color: { dark: "#000", light: "#fff" },
   });
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
@@ -181,25 +192,22 @@ async function drawFlyer() {
     img.src = qrDataURL;
   });
 
-  const qrX = boxX + qrPadding;
-  const qrY = boxY + qrPadding;
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+  ctx.drawImage(qrImg, boxX + qrPadding, boxY + qrPadding, qrSize, qrSize);
 
-  // "Scan to Enter" label
-  const labelY = qrY + qrSize + qrPadding * 0.3;
+  // Label: Scan to Enter
   ctx.font = `bold ${labelFontSize * 0.85}px ${FONT_STACK}`;
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = "#000";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.fillText("Scan to Enter", W / 2, labelY);
+  ctx.fillText("Scan to Enter", W / 2, boxY + qrPadding + qrSize + qrPadding * 0.2);
 
-  // Footer disclaimer
+  // Footer Disclaimer
   const footerFontSize = 10;
-  const footerHeight = 3 * footerFontSize;
-  const footerMarginTop = 20;
+  const footerHeight = footerFontSize * 3;
+  const footerTop = H - footerHeight;
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, H - footerHeight - footerMarginTop, W, footerHeight + footerMarginTop);
+  ctx.fillRect(0, footerTop, W, footerHeight);
 
   ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#333";
@@ -208,25 +216,6 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-// Wrap‑text helper
-function wrapText(context, text, maxWidth) {
-  const words = text.split(" ");
-  const lines = [];
-  let line = "";
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i] + " ";
-    const metrics = context.measureText(testLine);
-    if (metrics.width > maxWidth && i > 0) {
-      lines.push(line.trim());
-      line = words[i] + " ";
-    } else {
-      line = testLine;
-    }
-  }
-  lines.push(line.trim());
-  return lines;
-}
-
-// Initial setup
+// Initial render
 updateStateFromInputs();
 drawFlyer();

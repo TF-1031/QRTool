@@ -158,7 +158,7 @@ async function drawFlyer() {
   const boxX = (W - (qrSize + qrPadding * 2)) / 2;
   const boxY = (H - qrTotalHeight) / 2;
 
-  // Draw Contest Entry Details block (with 40px padding above)
+  // Draw Contest Entry Details block (with 20px padding above)
   if (state.contestDetails) {
     const fontSize = qrSize * 0.26;
     ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
@@ -170,7 +170,8 @@ async function drawFlyer() {
     const lines = wrapText(ctx, state.contestDetails, maxWidth);
     const lineSpacing = fontSize * 0.90;
     const blockHeight = lines.length * lineSpacing;
-    const startY = (boxY / 2) + 40; // padding above lines
+    const startY = (boxY / 2) + 20; // padding above lines
+
 
     lines.forEach((line, i) => {
       ctx.fillText(line, W / 2, startY + i * lineSpacing);
@@ -182,6 +183,7 @@ async function drawFlyer() {
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
   // Draw QR code
+     const startY = (boxY / 2) + 20; // padding above lines
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
@@ -242,3 +244,4 @@ function wrapText(context, text, maxWidth) {
 // Initial draw
 updateStateFromInputs();
 drawFlyer();
+

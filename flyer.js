@@ -17,9 +17,9 @@ const FONT_STACK = "Arial, sans-serif";
 const PURPLE = "#8d3b91";
 
 function titleCase(str) {
-  return str.replace(/\w\S*/g, (txt) =>
-    txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
-  );
+  return str.replace(/\w\S*/g, (txt) => {
+    return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+  });
 }
 
 function updateStateFromInputs() {
@@ -28,7 +28,7 @@ function updateStateFromInputs() {
   ).value;
   state.eventName = document.getElementById("eventName").value;
   state.contestDetails = titleCase(
-    document.getElementById("contestDetails").value
+    document.getElementById("contestDetails").value.trim()
   );
   state.url = document.getElementById("url").value;
   state.disclaimer = document.getElementById("disclaimer").value;
@@ -70,8 +70,8 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 
 document.getElementById("saveBtn").addEventListener("click", () => {
   const link = document.createElement("a");
-  link.download = "flyer.pdf";
-  link.href = canvas.toDataURL("image/jpeg");
+  link.download = "flyer.jpg"; // Correct file extension
+  link.href = canvas.toDataURL("image/jpeg", 0.92);
   link.click();
 });
 
@@ -81,7 +81,6 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
-  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
@@ -109,7 +108,6 @@ async function drawFlyer() {
     ctx.drawImage(state.image, offsetX, offsetY, drawWidth, drawHeight);
     ctx.globalAlpha = 1.0;
 
-    // Top gradient feather
     const gradientHeight = H * 0.45;
     const gradient = ctx.createLinearGradient(0, 0, 0, gradientHeight);
     gradient.addColorStop(0, "rgba(255,255,255,1)");
@@ -121,19 +119,19 @@ async function drawFlyer() {
   const qrSize = W * 0.25;
   const qrPadding = qrSize * 0.1;
   const labelFontSize = qrSize * 0.07;
-  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
 
+  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
   const boxX = (W - qrSize - qrPadding * 2) / 2;
   const boxY = (H - qrTotalHeight) / 2;
 
-  // Contest details title
+  // Title Text
   const textSize = qrSize * 0.26;
   ctx.font = `bold ${textSize}px ${FONT_STACK}`;
   ctx.fillStyle = PURPLE;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
 
-  const textLines = state.contestDetails.trim().split(/\r?\n/);
+  const textLines = state.contestDetails.split("\n");
   const lineSpacing = textSize * 1.05;
   const totalTextHeight = lineSpacing * textLines.length;
   const centerY = boxY / 2 + totalTextHeight / 3;
@@ -146,7 +144,7 @@ async function drawFlyer() {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-  // Generate and draw QR code
+  // QR code
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
@@ -164,7 +162,7 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // QR Label
+  // Label
   const labelY = qrY + qrSize + qrPadding * 0.3;
   ctx.font = `bold ${labelFontSize * 0.85}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
@@ -172,7 +170,7 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
 
-  // Disclaimer footer
+  // Footer disclaimer
   const footerFontSize = 10;
   const footerHeight = 3 * footerFontSize;
   const footerMarginTop = 20;
@@ -183,10 +181,10 @@ async function drawFlyer() {
   ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#333";
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillText(state.disclaimer, W / 2, H - footerHeight);
+  ctx.textBaseline = "middle";
+  ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-// Initial draw
+// Initial load
 updateStateFromInputs();
 drawFlyer();

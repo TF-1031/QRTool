@@ -103,11 +103,11 @@
   async function drawFlyer(ctx, W, H) {
     ctx.clearRect(0, 0, W, H);
 
-    // Background
+    // Background white base
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
 
-    // Background image with opacity
+    // Background image
     if (state.bgImage) {
       ctx.save();
       ctx.globalAlpha = 0.7;
@@ -132,7 +132,7 @@
       ctx.drawImage(state.bgImage, offsetX, offsetY, drawW, drawH);
       ctx.restore();
 
-      // Top feather gradient
+      // Top feather
       const gradHeight = H * 0.4;
       const gradient = ctx.createLinearGradient(0, 0, 0, gradHeight);
       gradient.addColorStop(0, "rgba(255,255,255,1)");
@@ -141,21 +141,21 @@
       ctx.fillRect(0, 0, W, gradHeight);
     }
 
-    // QR dimensions
+    // QR & Box
     const boxSize = Math.min(W, H) * 0.4;
     const qrSize = boxSize * 0.8;
     const qrPadding = qrSize * 0.1;
     const labelFontSize = qrSize * 0.12;
-    const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.6;
+    const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.1;
     const boxX = (W - (qrSize + qrPadding * 2)) / 2;
     const boxY = (H - qrTotalHeight) / 2;
 
-    // Contest title above QR
+    // Contest title
     if (state.eventInfo) {
       const formattedTitle = toMLATitleCase(state.eventInfo);
-      const textSize = qrSize * 0.3;
-      const textHeight = textSize * 1.2;
-      const verticalCenter = (boxY - textHeight) / 2;
+      const textSize = qrSize * 0.26;
+      const textHeight = textSize * 1.1;
+      const verticalCenter = boxY * 0.35;
 
       drawWrappedText(ctx, formattedTitle, qrSize * 2.5, W / 2, verticalCenter, textHeight, {
         size: textSize,
@@ -164,11 +164,11 @@
       });
     }
 
-    // QR code white box
+    // QR white box
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-    // Generate QR
+    // QR code
     const qrX = boxX + qrPadding;
     const qrY = boxY + qrPadding;
     const qrDataURL = await QRCode.toDataURL(state.url, {
@@ -186,14 +186,15 @@
 
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-    // Label under QR
-    ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
-    ctx.fillStyle = "#000000";
+    // Scan label
+    const labelY = qrY + qrSize + qrPadding * 0.3;
+    ctx.font = `bold ${labelFontSize * 0.85}px ${FONT_STACK}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText("Scan to Enter", W / 2, qrY + qrSize + qrPadding * 0.5);
+    ctx.fillStyle = "#000000";
+    ctx.fillText("Scan to Enter", W / 2, labelY);
 
-    // Footer disclaimer
+    // Disclaimer footer
     const footerFontSize = 10;
     const footerHeight = 3 * footerFontSize;
     ctx.fillStyle = "#ffffff";

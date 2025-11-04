@@ -11,22 +11,31 @@
 <body>
   <h2>Flyer Generator</h2>
 
-  <div class="form‑container">
-    <div class="left‑col">
-      <div class="row">
-        <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
-        <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
-      </div>
-      <div class="row"><input id="eventName" type="text" placeholder="Event Name" /></div>
-      <div class="row"><input id="eventInfoInput" type="text" placeholder="Contest Entry Details" /></div>
-      <div class="row"><input id="urlInput" type="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" /></div>
+<div class="form-columns">
+  <div class="left-column">
+    <div class="form-control">
+      <label>Orientation:</label>
+      <label><input type="radio" name="orientation" value="portrait" checked /> Portrait</label>
+      <label><input type="radio" name="orientation" value="landscape" /> Landscape</label>
     </div>
+    <input id="eventName" placeholder="Event Name" />
+    <input id="contestDetails" placeholder="Contest Entry Details" />
+    <input id="url" placeholder="Landing Page URL" value="https://www.sparklight.com/internet" />
+    <input type="file" id="imageUpload" />
+  </div>
 
-    <div class="right‑col">
-      <div class="row">
-        <textarea id="disclaimerInput" placeholder="Disclaimer...">No purchase necessary. Entry open to all eligible participants.
-Scan QR Code to see full terms and conditions at the contest link.</textarea>
-      </div>
+  <div class="right-column">
+    <textarea id="disclaimer" wrap="soft">
+No purchase necessary. Entry open to all eligible participants.
+Scan QR Code to see full terms and conditions at the contest link.
+    </textarea>
+    <div class="button-group">
+      <button id="saveBtn">Save PDF</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+</div>
+
       <div class="row"><input id="bgUpload" type="file" accept="image/*" /></div>
       <div class="row buttons‑row">
         <button id="saveBtn" class="btn">Save PDF</button>
@@ -42,5 +51,6 @@ Scan QR Code to see full terms and conditions at the contest link.</textarea>
   <script src="flyer.js"></script>
 </body>
 </html>
+
 
 

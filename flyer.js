@@ -4,7 +4,7 @@ const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
 const state = {
-  orientation: document.querySelector('input[name="orientation"]:checked')?.value || "portrait",
+  orientation: document.querySelector('input[name="orientation"]:checked')?.value || "landscape",
   eventName: "",
   contestDetails: "",
   url: "https://www.sparklight.com/internet",
@@ -141,7 +141,7 @@ async function drawFlyer() {
     ctx.drawImage(state.logo, (W - logoWidth) / 2, 10, logoWidth, logoHeight);
   }
 
-  // Contest Title
+  // Text setup
   const qrSize = W * 0.25;
   const qrPadding = qrSize * 0.10;
   const labelFontSize = qrSize * 0.08;
@@ -153,7 +153,7 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
 
   const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
-  const lineSpacing = fontSize * 1.2;
+  const lineSpacing = fontSize * 0.9;
   const textBlockHeight = lines.length * lineSpacing;
 
   const contentTopY = H / 2 - (textBlockHeight + qrSize + labelFontSize + qrPadding * 2 + 40) / 2;
@@ -176,6 +176,7 @@ async function drawFlyer() {
     margin: 0,
     color: { dark: "#000000", light: "#ffffff" }
   });
+
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -195,7 +196,6 @@ async function drawFlyer() {
   ctx.fillText("Scan to Enter", W / 2, labelY);
 }
 
-// Wrap helper
 function wrapText(ctx, text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
@@ -225,4 +225,3 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
-

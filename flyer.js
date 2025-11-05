@@ -17,6 +17,7 @@ const state = {
 const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 const BRAND_COLOR = "#8d3b91";
 
+// MLA-style Title Case with all-caps override
 function mlaTitleCase(input) {
   const smallWords = new Set([
     "a", "an", "and", "as", "at", "but", "by", "for", "in",
@@ -38,18 +39,14 @@ function sanitizeFilename(name) {
 }
 
 function updateStateFromInputs() {
-  state.orientation = document.querySelector(
-    'input[name="orientation"]:checked'
-  ).value;
+  state.orientation = document.querySelector('input[name="orientation"]:checked').value;
   state.eventName = document.getElementById("eventName").value.trim();
-  state.contestDetails = mlaTitleCase(
-    document.getElementById("contestDetails").value.trim()
-  );
+  state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
   state.url = document.getElementById("url").value.trim();
   state.disclaimer = document.getElementById("disclaimer").value.trim();
 }
 
-document.querySelectorAll("input, textarea, select").forEach((el) => {
+document.querySelectorAll("input, textarea, select").forEach(el => {
   el.addEventListener("input", async () => {
     updateStateFromInputs();
     await drawFlyer();
@@ -97,7 +94,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     const pdf = new jsPDF({
       orientation: state.orientation === "portrait" ? "p" : "l",
       unit: "pt",
-      format: [canvas.width, canvas.height],
+      format: [canvas.width, canvas.height]
     });
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
     pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
@@ -114,7 +111,7 @@ async function drawFlyer() {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background image
+  // Background Image
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
     const canvasAspect = W / H;
@@ -144,53 +141,55 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  // Logo at top
+  // Draw Logo
   if (state.logo) {
-    const logoWidth = Math.max(W * 0.1, 20);
-    const logoHeight = (state.logo.height / state.logo.width) * logoWidth;
+    const logoWidth = Math.max(W * 0.2, 40);
+    const aspectRatio = state.logo.width / state.logo.height;
+    const logoHeight = logoWidth / aspectRatio;
     const logoX = (W - logoWidth) / 2;
     const logoY = 10;
+
     ctx.drawImage(state.logo, logoX, logoY, logoWidth, logoHeight);
   }
 
   const qrSize = W * 0.25;
   const qrPadding = qrSize * 0.10;
   const labelFontSize = qrSize * 0.08;
-  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
+  const maxTextWidth = qrSize * 2.5;
+  const fontSize = qrSize * 0.26;
+
+  // Draw Contest Title
+  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+  ctx.fillStyle = BRAND_COLOR;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
+  const lineSpacing = fontSize * 0.9;
+  const textBlockHeight = lines.length * lineSpacing;
+
+  const contentTopY = H / 2 - (textBlockHeight + qrSize + labelFontSize + qrPadding * 2 + 40) / 2;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, contentTopY + i * lineSpacing);
+  });
+
+  // QR Box Positioning
+  const qrBoxTop = contentTopY + textBlockHeight + 40;
   const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = (H - qrTotalHeight) / 2;
+  const boxY = qrBoxTop;
+  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
 
-  // Contest Details
-  if (state.contestDetails) {
-    const fontSize = qrSize * 0.26;
-    ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-    ctx.fillStyle = BRAND_COLOR;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-
-    const maxWidth = qrSize * 2.5;
-    const lines = wrapText(ctx, state.contestDetails, maxWidth);
-    const lineSpacing = fontSize * 0.9;
-    const blockHeight = lines.length * lineSpacing;
-    const topEdge = state.logo ? 100 : 40;
-    const availableHeight = boxY - topEdge;
-    const startY = topEdge + (availableHeight - blockHeight) / 2;
-
-    lines.forEach((line, i) => {
-      ctx.fillText(line, W / 2, startY + i * lineSpacing);
-    });
-  }
-
-  // QR white box
+  // White QR box
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
+  // QR Code
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
     color: { dark: "#000000", light: "#ffffff" }
   });
-
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -202,7 +201,7 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Scan label
+  // Scan Label
   const labelY = qrY + qrSize + 10;
   ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
@@ -210,11 +209,14 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
 
-  // Disclaimer footer
+  // Disclaimer
   const footerFontSize = 10;
   const footerHeight = footerFontSize * 3;
+  const footerTop = H - footerHeight;
+
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, H - footerHeight, W, footerHeight);
+  ctx.fillRect(0, footerTop, W, footerHeight);
+
   ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#333";
   ctx.textAlign = "center";
@@ -222,20 +224,22 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-function wrapText(context, text, maxWidth) {
+// Wrap helper
+function wrapText(ctx, text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
-  let current = "";
-  words.forEach((w) => {
-    const test = current ? current + " " + w : w;
-    if (context.measureText(test).width > maxWidth && current) {
-      lines.push(current);
-      current = w;
+  let line = "";
+
+  words.forEach((word) => {
+    const testLine = line + word + " ";
+    if (ctx.measureText(testLine).width > maxWidth) {
+      lines.push(line.trim());
+      line = word + " ";
     } else {
-      current = test;
+      line = testLine;
     }
   });
-  if (current) lines.push(current);
+  if (line.trim()) lines.push(line.trim());
   return lines;
 }
 
@@ -247,6 +251,6 @@ logoImage.onload = () => {
 };
 logoImage.src = "sparklight-logo.png";
 
-// Initial
+// Initialize
 updateStateFromInputs();
 drawFlyer();

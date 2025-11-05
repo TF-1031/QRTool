@@ -125,11 +125,12 @@ select#downloadFormat {
 
 
 .page-logo {
-  max-width: 200px;
-  width: 20%;
-  min-width: 60px;
+  max-width: 400px;
+  width: 40%;
+  min-width: 100px;
   height: auto;
 }
+
 
 
 

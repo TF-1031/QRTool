@@ -120,8 +120,9 @@ select#downloadFormat {
 }
 .logo-container {
   text-align: center;
-  padding: 10px 0;
+  padding: 10px 0 5px 0; /* top 10px, bottom 5px */
 }
+
 
 .page-logo {
   max-width: 200px;
@@ -129,5 +130,6 @@ select#downloadFormat {
   min-width: 60px;
   height: auto;
 }
+
 
 

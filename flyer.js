@@ -4,18 +4,17 @@ const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
 const state = {
-  orientation: "landscape",
+  orientation: document.querySelector('input[name="orientation"]:checked')?.value || "portrait",
   eventName: "",
   contestDetails: "",
   url: "https://www.sparklight.com/internet",
-    image: null,
+  image: null,
   logo: null,
 };
 
 const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 const BRAND_COLOR = "#8d3b91";
 
-// MLA-style Title Case with all-caps override
 function mlaTitleCase(input) {
   const smallWords = new Set([
     "a", "an", "and", "as", "at", "but", "by", "for", "in",
@@ -41,7 +40,6 @@ function updateStateFromInputs() {
   state.eventName = document.getElementById("eventName").value.trim();
   state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
   state.url = document.getElementById("url").value.trim();
-  state.disclaimer = document.getElementById("disclaimer").value.trim();
 }
 
 document.querySelectorAll("input, textarea, select").forEach(el => {
@@ -72,7 +70,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   state.eventName = "";
   state.contestDetails = "";
   state.url = "https://www.sparklight.com/internet";
-
+  state.image = null;
   drawFlyer();
 });
 
@@ -107,7 +105,6 @@ async function drawFlyer() {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background Image
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
     const canvasAspect = W / H;
@@ -137,24 +134,19 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  // Draw Logo
+  // Logo
   if (state.logo) {
     const logoWidth = Math.max(W * 0.2, 40);
-    const aspectRatio = state.logo.width / state.logo.height;
-    const logoHeight = logoWidth / aspectRatio;
-    const logoX = (W - logoWidth) / 2;
-    const logoY = 10;
-
-    ctx.drawImage(state.logo, logoX, logoY, logoWidth, logoHeight);
+    const logoHeight = logoWidth / (state.logo.width / state.logo.height);
+    ctx.drawImage(state.logo, (W - logoWidth) / 2, 10, logoWidth, logoHeight);
   }
 
+  // Contest Title
   const qrSize = W * 0.25;
   const qrPadding = qrSize * 0.10;
   const labelFontSize = qrSize * 0.08;
   const maxTextWidth = qrSize * 2.5;
   const fontSize = qrSize * 0.26;
-
-  // Draw Contest Title
   ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
   ctx.fillStyle = BRAND_COLOR;
   ctx.textAlign = "center";
@@ -170,17 +162,15 @@ async function drawFlyer() {
     ctx.fillText(line, W / 2, contentTopY + i * lineSpacing);
   });
 
-  // QR Box Positioning
+  // QR Code
   const qrBoxTop = contentTopY + textBlockHeight + 40;
   const boxX = (W - (qrSize + qrPadding * 2)) / 2;
   const boxY = qrBoxTop;
   const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
 
-  // White QR box
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
 
-  // QR Code
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
@@ -197,15 +187,13 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Scan Label
   const labelY = qrY + qrSize + 10;
   ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
-
- }
+}
 
 // Wrap helper
 function wrapText(ctx, text, maxWidth) {
@@ -237,6 +225,3 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
-
-
-

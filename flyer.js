@@ -152,9 +152,23 @@ async function drawFlyer() {
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
 
-  const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
-  const lineSpacing = fontSize * 1;
-  const textBlockHeight = lines.length * lineSpacing;
+  // --- Contest Text ---
+const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
+
+// Set line spacing to exactly 1.0x the font size (normal spacing)
+const lineSpacing = fontSize * 1.0;
+
+// Calculate total text block height
+const textBlockHeight = lines.length * lineSpacing;
+
+// Vertically center the group of text + QR below it
+const contentTopY = H / 2 - (textBlockHeight + qrSize + labelFontSize + qrPadding * 2 + 40) / 2;
+
+// Draw each line with proper spacing
+lines.forEach((line, i) => {
+  ctx.fillText(line, W / 2, contentTopY + i * lineSpacing);
+});
+
 
   const contentTopY = H / 2 - (textBlockHeight + qrSize + labelFontSize + qrPadding * 2 + 40) / 2;
 
@@ -225,4 +239,5 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
+
 

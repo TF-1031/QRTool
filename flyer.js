@@ -16,40 +16,40 @@ const state = {
 const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 const BRAND_COLOR = "#8d3b91";
 
-function mlaTitleCase(input) {
+function mlaTitleCase(text) {
   const smallWords = new Set([
     "a", "an", "and", "as", "at", "but", "by", "for", "in",
     "nor", "of", "on", "or", "so", "the", "to", "up", "yet", "with"
   ]);
-  const words = input.split(/\s+/);
-  return words
-    .map((word, idx) => {
-      if (word === word.toUpperCase()) return word; // Preserve ALL CAPS
-      const lower = word.toLowerCase();
-      const isFirstOrLast = idx === 0 || idx === words.length - 1;
-      if (smallWords.has(lower) && !isFirstOrLast) return lower;
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join(" ");
+  const words = text.split(/\s+/);
+  return words.map((word, i) => {
+    if (word === word.toUpperCase()) return word; // preserve ALL CAPS
+    const lower = word.toLowerCase();
+    if (smallWords.has(lower) && i !== 0 && i !== words.length - 1) {
+      return lower;
+    }
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(" ");
 }
 
 function sanitizeFilename(name) {
-  return name
-    .trim()
-    .replace(/[^a-zA-Z0-9 _-]/g, "")
-    .replace(/\s+/g, "_");
+  return name.trim().replace(/[^a-zA-Z0-9 _-]/g, "").replace(/\s+/g, "_");
 }
 
 function updateStateFromInputs() {
-  state.orientation = document.querySelector('input[name="orientation"]:checked').value;
+  state.orientation = document.querySelector(
+    'input[name="orientation"]:checked'
+  ).value;
   state.eventName = document.getElementById("eventName").value.trim();
-  state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
+  state.contestDetails = mlaTitleCase(
+    document.getElementById("contestDetails").value.trim()
+  );
   state.url = document.getElementById("url").value.trim();
   state.disclaimer = document.getElementById("disclaimer").value.trim();
 }
 
-document.querySelectorAll("input, textarea, select").forEach((el) => {
-  el.addEventListener("input", async () => {
+document.querySelectorAll("input, textarea").forEach((input) => {
+  input.addEventListener("input", async () => {
     updateStateFromInputs();
     await drawFlyer();
   });
@@ -59,13 +59,13 @@ document.getElementById("imageUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = async (evt) => {
+    reader.onload = async (event) => {
       const img = new Image();
       img.onload = async () => {
         state.image = img;
         await drawFlyer();
       };
-      img.src = evt.target.result;
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   }
@@ -110,29 +110,29 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
+  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background image (if uploaded)
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
     const canvasAspect = W / H;
-    let drawW, drawH, offsetX, offsetY;
+    let drawWidth, drawHeight, offsetX, offsetY;
 
     if (imgAspect > canvasAspect) {
-      drawH = H;
-      drawW = drawH * imgAspect;
-      offsetX = (W - drawW) / 2;
+      drawHeight = H;
+      drawWidth = H * imgAspect;
+      offsetX = (W - drawWidth) / 2;
       offsetY = 0;
     } else {
-      drawW = W;
-      drawH = drawW / imgAspect;
+      drawWidth = W;
+      drawHeight = W / imgAspect;
       offsetX = 0;
-      offsetY = (H - drawH) / 2;
+      offsetY = (H - drawHeight) / 2;
     }
 
     ctx.globalAlpha = 0.7;
-    ctx.drawImage(state.image, offsetX, offsetY, drawW, drawH);
+    ctx.drawImage(state.image, offsetX, offsetY, drawWidth, drawHeight);
     ctx.globalAlpha = 1.0;
 
     const gradientHeight = H * 0.4;
@@ -143,74 +143,67 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  // QR box setup
   const qrSize = W * 0.25;
-  const qrPadding = qrSize * 0.10;
+  const qrPadding = qrSize * 0.1;
   const labelFontSize = qrSize * 0.08;
-  const boxWidth = qrSize + qrPadding * 2;
-  const boxHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
+  const maxTextWidth = qrSize * 2.5;
+  const textFontSize = qrSize * 0.26;
+  const textLineSpacing = textFontSize * 0.9;
 
-  // Contest Title block
-  let contestBlockHeight = 0;
-  if (state.contestDetails) {
-    const fontSize = qrSize * 0.26;
-    ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-    ctx.fillStyle = BRAND_COLOR;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+  // Split contest details into lines
+  ctx.font = `900 ${textFontSize}px ${FONT_STACK}`;
+  const textLines = wrapText(ctx, state.contestDetails, maxTextWidth);
+  const textBlockHeight = textLines.length * textLineSpacing;
 
-    const maxWidth = qrSize * 2.5;
-    const lines = wrapText(ctx, state.contestDetails, maxWidth);
-    const lineSpacing = fontSize * 0.90;
-    contestBlockHeight = lines.length * lineSpacing + 20;
+  // Total space: text + padding + QR + label
+  const totalContentHeight = textBlockHeight + 20 + qrPadding * 2 + qrSize + 10 + labelFontSize * 1.2;
+  const contentTopY = (H - totalContentHeight) / 2;
 
-    const startY = (H - boxHeight) / 2 - contestBlockHeight;
+  // Draw contest details text
+  ctx.fillStyle = BRAND_COLOR;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  textLines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, contentTopY + i * textLineSpacing);
+  });
 
-    lines.forEach((line, i) => {
-      ctx.fillText(line, W / 2, startY + i * lineSpacing);
-    });
-  }
+  const boxY = contentTopY + textBlockHeight + 20;
+  const boxX = (W - qrSize - qrPadding * 2) / 2;
 
-  const boxY = (H - boxHeight) / 2 + contestBlockHeight / 2;
-  const boxX = (W - boxWidth) / 2;
-
-  // QR white box
+  // White QR box
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+  const qrBoxHeight = qrPadding * 2 + qrSize + 10 + labelFontSize * 1.2;
+  ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrBoxHeight);
 
-  // QR code render
+  // Draw QR
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
-    color: { dark: "#000000", light: "#ffffff" }
+    color: { dark: "#000000", light: "#ffffff" },
   });
-
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = qrDataURL;
   });
-
   const qrX = boxX + qrPadding;
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Label under QR code
+  // Label below QR
+  const labelY = qrY + qrSize + 10;
   ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = "#000";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.fillText("Scan to Enter", W / 2, qrY + qrSize + 10);
+  ctx.fillText("Scan to Enter", W / 2, labelY);
 
-  // Footer disclaimer
+  // Disclaimer footer
   const footerFontSize = 10;
   const footerHeight = footerFontSize * 3;
-  const footerTop = H - footerHeight;
-
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, footerTop, W, footerHeight);
-
+  ctx.fillRect(0, H - footerHeight, W, footerHeight);
   ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#333";
   ctx.textAlign = "center";
@@ -218,27 +211,25 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-// Text wrapping helper
-function wrapText(ctx, text, maxWidth) {
+// Wrap text into lines that fit within maxWidth
+function wrapText(context, text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
-  let line = "";
+  let current = "";
 
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + (line ? " " : "") + words[i];
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > maxWidth && line) {
-      lines.push(line);
-      line = words[i];
+  for (const word of words) {
+    const testLine = current ? current + " " + word : word;
+    if (context.measureText(testLine).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
     } else {
-      line = testLine;
+      current = testLine;
     }
   }
-
-  if (line) lines.push(line);
+  if (current) lines.push(current);
   return lines;
 }
 
-// Start
+// Init
 updateStateFromInputs();
 drawFlyer();

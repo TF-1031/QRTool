@@ -4,7 +4,7 @@ const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
 const state = {
-  orientation: "portrait",
+  orientation: "landscape",
   eventName: "",
   contestDetails: "",
   url: "https://www.sparklight.com/internet",
@@ -254,3 +254,4 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
+

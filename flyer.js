@@ -185,8 +185,8 @@ async function drawFlyer() {
 
   const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
 
-  // ---- LINE SPACING EXACTLY 1.0x ----
-  const lineSpacing = fontSize * 1.0;
+  // ---- LINE SPACING EXACTLY 1.2x ----
+  const lineSpacing = fontSize * 1.2;
 
   // total text block height (if n lines, last baseline sits at (n-1)*lineSpacing;
   // using n*lineSpacing gives a bit more breathing room above QR, matching prior layout)
@@ -244,3 +244,4 @@ logoImage.src = "sparklight-logo.png";
 // init
 updateStateFromInputs();
 drawFlyer();
+

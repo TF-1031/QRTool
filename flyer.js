@@ -22,17 +22,15 @@ function mlaTitleCase(input) {
     "nor", "of", "on", "or", "so", "the", "to", "up", "yet", "with"
   ]);
   const words = input.split(/\s+/);
-  return words.map((word, idx) => {
-    if (word === word.toUpperCase()) {
-      return word; // preserve all‑caps from user (e.g., TV)
-    }
-    const lower = word.toLowerCase();
-    const isFirstOrLast = idx === 0 || idx === words.length - 1;
-    if (smallWords.has(lower) && !isFirstOrLast) {
-      return lower;
-    }
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
-  }).join(" ");
+  return words
+    .map((word, idx) => {
+      if (word === word.toUpperCase()) return word; // Preserve ALL CAPS
+      const lower = word.toLowerCase();
+      const isFirstOrLast = idx === 0 || idx === words.length - 1;
+      if (smallWords.has(lower) && !isFirstOrLast) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
 }
 
 function sanitizeFilename(name) {
@@ -43,13 +41,9 @@ function sanitizeFilename(name) {
 }
 
 function updateStateFromInputs() {
-  state.orientation = document.querySelector(
-    'input[name="orientation"]:checked'
-  ).value;
+  state.orientation = document.querySelector('input[name="orientation"]:checked').value;
   state.eventName = document.getElementById("eventName").value.trim();
-  state.contestDetails = mlaTitleCase(
-    document.getElementById("contestDetails").value.trim()
-  );
+  state.contestDetails = mlaTitleCase(document.getElementById("contestDetails").value.trim());
   state.url = document.getElementById("url").value.trim();
   state.disclaimer = document.getElementById("disclaimer").value.trim();
 }
@@ -116,11 +110,10 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
-  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background Image
+  // Background image (if uploaded)
   if (state.image) {
     const imgAspect = state.image.width / state.image.height;
     const canvasAspect = W / H;
@@ -150,86 +143,15 @@ async function drawFlyer() {
     ctx.fillRect(0, 0, W, gradientHeight);
   }
 
-  // Title Block
+  // QR box setup
   const qrSize = W * 0.25;
   const qrPadding = qrSize * 0.10;
   const labelFontSize = qrSize * 0.08;
-  const maxTitleWidth = qrSize * 2.5;
-  const fontSize = qrSize * 0.26;
+  const boxWidth = qrSize + qrPadding * 2;
+  const boxHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
 
-  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = BRAND_COLOR;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-
-  const lines = wrapText(ctx, state.contestDetails, maxTitleWidth);
-  const lineSpacing = fontSize * 0.90;
-  const blockHeight = lines.length * lineSpacing;
-  const titleY = 40; // half the previous padding
-  lines.forEach((line, i) => {
-    ctx.fillText(line, W / 2, titleY + i * lineSpacing);
-  });
-
-  // Calculate Y for QR below title
-  const qrTopY = titleY + blockHeight + 30;
-  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
-
-  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = qrTopY;
-
-  // QR White Box
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
-
-  // QR Code
-  const qrDataURL = await QRCode.toDataURL(state.url, {
-    width: Math.round(qrSize),
-    margin: 0,
-    color: { dark: "#000000", light: "#ffffff" }
-  });
-  const qrImg = await new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = qrDataURL;
-  });
-
-  const qrX = boxX + qrPadding;
-  const qrY = boxY + qrPadding;
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-  // Label under QR
-  const labelY = qrY + qrSize + 10;
-  ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#000000";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillText("Scan to Enter", W / 2, labelY);
-
-  // Disclaimer
-  const footerFontSize = 10;
-  const footerHeight = footerFontSize * 3;
-  const footerTop = H - footerHeight;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, footerTop, W, footerHeight);
-
-  ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#333";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
-}
-
-  // QR Box parameters
-  const qrSize = W * 0.25;
-  const qrPadding = qrSize * 0.10;
-  const labelFontSize = qrSize * 0.08;
-  const qrTotalHeight = qrSize + qrPadding * 2 + labelFontSize * 1.2;
-  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = (H - qrTotalHeight) / 2;
-
-  // Draw Contest Entry Details block (with 20px padding above)
+  // Contest Title block
+  let contestBlockHeight = 0;
   if (state.contestDetails) {
     const fontSize = qrSize * 0.26;
     ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
@@ -240,26 +162,29 @@ async function drawFlyer() {
     const maxWidth = qrSize * 2.5;
     const lines = wrapText(ctx, state.contestDetails, maxWidth);
     const lineSpacing = fontSize * 0.90;
-    const blockHeight = lines.length * lineSpacing;
-    const startY = (boxY / 2) + 20; // padding above lines
+    contestBlockHeight = lines.length * lineSpacing + 20;
 
+    const startY = (H - boxHeight) / 2 - contestBlockHeight;
 
     lines.forEach((line, i) => {
       ctx.fillText(line, W / 2, startY + i * lineSpacing);
     });
   }
 
-  // Draw QR white box
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
+  const boxY = (H - boxHeight) / 2 + contestBlockHeight / 2;
+  const boxX = (W - boxWidth) / 2;
 
-  // Draw QR code
-     const startY = (boxY / 2) + 20; // padding above lines
+  // QR white box
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+  // QR code render
   const qrDataURL = await QRCode.toDataURL(state.url, {
     width: Math.round(qrSize),
     margin: 0,
     color: { dark: "#000000", light: "#ffffff" }
   });
+
   const qrImg = await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -271,13 +196,12 @@ async function drawFlyer() {
   const qrY = boxY + qrPadding;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Draw "Scan to Enter" label with extra 10px padding under QR
-  const labelY = qrY + qrSize + 10;
+  // Label under QR code
   ctx.font = `bold ${labelFontSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.fillText("Scan to Enter", W / 2, labelY);
+  ctx.fillText("Scan to Enter", W / 2, qrY + qrSize + 10);
 
   // Footer disclaimer
   const footerFontSize = 10;
@@ -294,26 +218,27 @@ async function drawFlyer() {
   ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
 }
 
-// Helper: wrap text into lines
-function wrapText(context, text, maxWidth) {
+// Text wrapping helper
+function wrapText(ctx, text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
-  let current = "";
-  words.forEach((w) => {
-    const test = current ? current + " " + w : w;
-    if (context.measureText(test).width > maxWidth && current) {
-      lines.push(current);
-      current = w;
+  let line = "";
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + (line ? " " : "") + words[i];
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && line) {
+      lines.push(line);
+      line = words[i];
     } else {
-      current = test;
+      line = testLine;
     }
-  });
-  if (current) lines.push(current);
+  }
+
+  if (line) lines.push(line);
   return lines;
 }
 
-// Initial draw
+// Start
 updateStateFromInputs();
 drawFlyer();
-
-

@@ -72,9 +72,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   state.eventName = "";
   state.contestDetails = "";
   state.url = "https://www.sparklight.com/internet";
-  state.disclaimer =
-    "No purchase necessary. Entry open to all eligible participants.\nScan QR Code to see full terms and conditions at the contest link.";
-  state.image = null;
+
   drawFlyer();
 });
 
@@ -239,5 +237,6 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
+
 
 

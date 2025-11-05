@@ -16,7 +16,7 @@ body {
 }
 
 #pageLogo {
-  width: 40%;
+  width: 20%;
   min-width: 50px;
   padding-top: 5px;
   padding-bottom: 15px;
@@ -114,5 +114,6 @@ label {
   height: auto;
   display: block;
 }
+
 
 

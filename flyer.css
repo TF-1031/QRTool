@@ -28,14 +28,15 @@ h2 {
   font-weight: 700;
 }
 
-.form-columns {
+form-columns {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  justify-content: center; /* already present, reinforces centering */
   align-items: flex-start;
-  justify-content: center;
-  margin-bottom: 1rem;
+  gap: 2rem;
   flex-wrap: wrap;
+  max-width: 800px; /* keeps the two columns tight in the center */
+  margin: 0 auto 1rem; /* centers horizontally */
 }
 
 .left-column,
@@ -99,4 +100,5 @@ textarea {
   height: auto;
   display: block;
 }
+
 

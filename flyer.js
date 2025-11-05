@@ -153,7 +153,7 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
 
   const lines = wrapText(ctx, state.contestDetails, maxTextWidth);
-  const lineSpacing = fontSize * 0.9;
+  const lineSpacing = fontSize * 1;
   const textBlockHeight = lines.length * lineSpacing;
 
   const contentTopY = H / 2 - (textBlockHeight + qrSize + labelFontSize + qrPadding * 2 + 40) / 2;
@@ -225,3 +225,4 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
+

@@ -8,9 +8,7 @@ const state = {
   eventName: "",
   contestDetails: "",
   url: "https://www.sparklight.com/internet",
-  disclaimer:
-    "No purchase necessary. Entry open to all eligible participants.\nScan QR Code to see full terms and conditions at the contest link.",
-  image: null,
+    image: null,
   logo: null,
 };
 
@@ -209,20 +207,7 @@ async function drawFlyer() {
   ctx.textBaseline = "top";
   ctx.fillText("Scan to Enter", W / 2, labelY);
 
-  // Disclaimer
-  const footerFontSize = 10;
-  const footerHeight = footerFontSize * 3;
-  const footerTop = H - footerHeight;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, footerTop, W, footerHeight);
-
-  ctx.font = `italic ${footerFontSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#333";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(state.disclaimer, W / 2, H - footerHeight / 2);
-}
+ }
 
 // Wrap helper
 function wrapText(ctx, text, maxWidth) {
@@ -254,4 +239,5 @@ logoImage.src = "sparklight-logo.png";
 // Initialize
 updateStateFromInputs();
 drawFlyer();
+
 

@@ -9,41 +9,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
- <div class="logo-container">
-  <img src="eventflyerbuilderlogo.png" alt="Flyer Generator Logo" class="page-logo" />
-</div>
-
+  <header>
+    <img src="eventflyerbuilderlogo.png" alt="Flyer Logo" id="pageLogo">
+  </header>
 
   <form id="flyerForm">
     <div class="form-columns">
-      <!-- Left column -->
       <div class="left-column">
-        <label>Orientation:</label>
-        <label><input type="radio" name="orientation" value="landscape" checked /> Landscape</label>
-        <label><input type="radio" name="orientation" value="portrait" /> Portrait</label>
-      
+        <label>Event Name</label>
+        <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
-        <label for="eventName">Event Name</label>
-        <input type="text" id="eventName" placeholder="Event Name" />
+        <label>Contest Entry Details</label>
+        <textarea id="contestDetails" placeholder="Win a $100 Gift Card!\nVisit Booth 22."></textarea>
 
-        <label for="contestDetails">Contest Entry Details</label>
-        <textarea id="contestDetails" placeholder="Enter contest entry details"></textarea>
-
-        <label for="url">Landing Page URL</label>
+        <label>Contest URL</label>
         <input type="url" id="url" value="https://www.sparklight.com/internet" />
+        
+        <label>Orientation</label>
+        <div class="orientation-options">
+          <label><input type="radio" name="orientation" value="portrait"> Portrait</label>
+          <label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
+        </div>
 
-        <label for="imageUpload">Upload Background Image</label>
+        <label>Background Image</label>
         <input type="file" id="imageUpload" accept="image/*" />
       </div>
 
-      <!-- Right column -->
+      <div class="right-column">
+        <label>Download Format</label>
+        <select id="downloadFormat">
+          <option value="pdf">PDF</option>
+          <option value="jpg">JPG</option>
+        </select>
+
         <div class="buttons-row">
-          <select id="downloadFormat">
-            <option value="pdf">PDF</option>
-            <option value="jpg">JPG</option>
-          </select>
-          <button type="button" class="btn" id="saveBtn">Download</button>
-          <button type="button" class="btn" id="resetBtn">Reset</button>
+          <button type="button" id="saveBtn" class="btn">Download</button>
+          <button type="button" id="resetBtn" class="btn">Reset</button>
         </div>
       </div>
     </div>
@@ -54,8 +55,3 @@
   </div>
 </body>
 </html>
-
-
-
-
-

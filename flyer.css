@@ -118,12 +118,3 @@ select#downloadFormat {
   height: auto;
   display: block;
 }
-#sparklightLogo {
-  display: block;
-  margin: 10px auto 0;
-  width: 10%;
-  min-width: 20px;
-  height: auto;
-}
-
-

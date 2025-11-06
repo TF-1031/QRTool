@@ -2,37 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Event Flyer Builder</title>
   <link rel="stylesheet" href="flyer.css" />
 </head>
-
 <body>
-
   <div class="page-container">
 
+    <!-- FORM (white card) -->
     <div class="card form-card">
-      <!-- HEADER INSIDE CARD -->
+      <!-- Header inside the card, spans full width of card -->
       <div class="header-bar">
         <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
       </div>
 
-      <!-- FORM -->
-      <form id="flyerForm">
-
+      <form id="flyerForm" autocomplete="off">
         <div class="form-columns">
-
           <!-- LEFT -->
-          <div class="left-column">
-
-            <label>Event Name</label>
+          <div class="col left-column">
+            <label for="eventName">Event Name</label>
             <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
-            <label>Contest Entry Details</label>
-            <textarea id="contestDetails"
-              placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
+            <label for="contestDetails">Contest Entry Details</label>
+            <textarea id="contestDetails" placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
 
-            <label>Text Color</label>
+            <label for="textColorSelect">Text Color</label>
             <select id="textColorSelect">
               <option value="#A600A5">Bright Purple</option>
               <option value="#2323A4">Purple</option>
@@ -53,15 +47,13 @@
               <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
             </div>
 
-            <label>Contest URL</label>
-            <input type="text" id="contestURL" value="https://www.sparklight.com/internet" />
-
+            <label for="contestURL">Contest URL</label>
+            <input type="url" id="contestURL" value="https://www.sparklight.com/internet" />
           </div>
 
           <!-- RIGHT -->
-          <div class="right-column">
-
-            <label>Download Format</label>
+          <div class="col right-column">
+            <label for="downloadFormat">Download Format</label>
             <select id="downloadFormat">
               <option value="pdf">PDF</option>
               <option value="png">PNG</option>
@@ -72,26 +64,29 @@
               <label><input type="radio" name="orient" value="landscape" checked> Landscape</label>
             </div>
 
-            <label id="bgLabel">Background Image</label>
+            <label id="bgLabel" for="imageUpload">Background Image</label>
             <input type="file" id="imageUpload" accept="image/*" capture="environment" />
 
             <div class="button-row">
-              <button type="button" id="downloadBtn">Download</button>
-              <button type="button" id="resetBtn">Reset</button>
+              <button type="button" id="downloadBtn" class="btn">Download</button>
+              <button type="button" id="resetBtn" class="btn btn-gray">Reset</button>
             </div>
-
           </div>
         </div>
       </form>
     </div>
 
-    <!-- PREVIEW -->
-    <div class="card preview-card">
+    <!-- PREVIEW (no white card—just the flyer) -->
+    <div class="preview-wrap">
       <canvas id="flyerCanvas"></canvas>
     </div>
 
   </div>
 
+  <!-- libs first -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- main -->
   <script src="flyer.js"></script>
 </body>
 </html>

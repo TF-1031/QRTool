@@ -1,13 +1,22 @@
-// flyer.js (FINAL)
+// flyer.js (FINAL COMPLETE WITH HEADER SWAP)
 import QRCode from "https://cdn.skypack.dev/qrcode";
 
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
-// ---------------- STATE ----------------
+// ---------------- CONSTANTS ----------------
 const BRAND_COLOR = "#8d3b91";
 const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 
+// Header logo assets and handle
+const headerLogos = {
+  default: "eventflyerbuilder-logo.png",
+  done: "eventflyerbuilder-done-logo.png",
+};
+let headerLogoImage = new Image();
+headerLogoImage.src = headerLogos.default;
+
+// ---------------- STATE ----------------
 const state = {
   orientation: document.querySelector('input[name="orientation"]:checked')?.value || "landscape",
   eventName: "",
@@ -62,7 +71,7 @@ function wrapText(ctx, text, maxWidth) {
 
 // simple luminance for contrast (returns #000 or #fff)
 function contrastColor(hex) {
-  const c = hex.replace("#","").padStart(6,"0");
+  const c = (hex || "#000").replace("#","").padStart(6,"0");
   const r = parseInt(c.slice(0,2),16);
   const g = parseInt(c.slice(2,4),16);
   const b = parseInt(c.slice(4,6),16);
@@ -70,7 +79,7 @@ function contrastColor(hex) {
   return L > 160 ? "#000000" : "#ffffff";
 }
 
-// draw a rounded rect path (since roundRect may not exist everywhere)
+// draw a rounded rect path (fallback if CanvasRenderingContext2D.roundRect is missing)
 function pathRoundRect(x, y, w, h, r=10) {
   const rr = Math.min(r, w/2, h/2);
   ctx.beginPath();
@@ -93,9 +102,9 @@ function updateState() {
   state.url = document.getElementById("url").value.trim();
   state.whiteText = document.getElementById("whiteTextToggle").checked;
 
-  // color/effects controls (exist in HTML)
   const colorSel = document.getElementById("textColorSelect");
   if (colorSel) state.textColor = colorSel.value || BRAND_COLOR;
+
   const eo = document.getElementById("effectOutline");
   const es = document.getElementById("effectShadow");
   const eb = document.getElementById("effectBox");
@@ -108,6 +117,8 @@ function updateState() {
 document.querySelectorAll("input, textarea, select").forEach(el => {
   el.addEventListener("input", async () => {
     updateState();
+    // Switch header to "done" on any change
+    headerLogoImage.src = headerLogos.done;
     await drawFlyer();
   });
 });
@@ -118,7 +129,12 @@ document.getElementById("imageUpload").addEventListener("change", e => {
   const reader = new FileReader();
   reader.onload = evt => {
     const img = new Image();
-    img.onload = async () => { state.image = img; await drawFlyer(); };
+    img.onload = async () => {
+      state.image = img;
+      // mark as done state after adding image
+      headerLogoImage.src = headerLogos.done;
+      await drawFlyer();
+    };
     img.src = evt.target.result;
   };
   reader.readAsDataURL(file);
@@ -126,6 +142,8 @@ document.getElementById("imageUpload").addEventListener("change", e => {
 
 document.getElementById("resetBtn").addEventListener("click", () => {
   document.getElementById("flyerForm").reset();
+
+  // Reset state to defaults
   state.eventName = "";
   state.contestDetails = "";
   state.url = "https://www.sparklight.com/internet";
@@ -135,6 +153,10 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   state.effectOutline = false;
   state.effectShadow = false;
   state.effectBox = false;
+
+  // Reset header logo to default
+  headerLogoImage.src = headerLogos.default;
+
   drawFlyer();
 });
 
@@ -196,11 +218,20 @@ async function drawFlyer() {
     ctx.fillRect(0,0,W,gradH);
   }
 
-  // top logo with extra padding
+  // top header logo (centered)
+  if (headerLogoImage) {
+    const lw = Math.max(W * 0.20, 40);
+    const aspect = (headerLogoImage.width || 400) / (headerLogoImage.height || 100);
+    const lh = lw / aspect;
+    ctx.drawImage(headerLogoImage, (W - lw)/2, 20, lw, lh);
+  }
+
+  // Sparklight logo mark (if provided)
   if (state.logo) {
     const lw = Math.max(W*0.2, 40);
     const lh = lw / (state.logo.width / state.logo.height);
-    ctx.drawImage(state.logo, (W - lw)/2, 20, lw, lh);
+    // If you want the brand mark too, uncomment next line:
+    // ctx.drawImage(state.logo, (W - lw)/2, 20, lw, lh);
   }
 
   // layout metrics
@@ -226,7 +257,7 @@ async function drawFlyer() {
   const contentTopY = H/2 - (textBlockHeight + qrSize + labelFontSize + qrPadding*2 + 40)/2;
   const textX = W/2;
 
-  // background box behind text (optional)
+  // optional background box behind text
   if (state.effectBox && lines.length) {
     const padX = 20, padY = 10;
     const boxW = maxTextWidth + padX*2;
@@ -273,7 +304,7 @@ async function drawFlyer() {
     ctx.fillText(line, textX, y);
   });
 
-  // reset shadow for subsequent drawing
+  // reset shadow for rest of drawing
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
@@ -309,10 +340,18 @@ async function drawFlyer() {
   ctx.fillText("Scan to Enter", W/2, boxY + qrPadding + qrSize + 10);
 }
 
-// ---------------- LOAD LOGO & INIT ----------------
+// ---------------- LOAD SPARKLIGHT LOGO (if you want the brand mark in-canvas) ----------------
 const logoImage = new Image();
 logoImage.onload = () => { state.logo = logoImage; drawFlyer(); };
+// If you don't want an additional logo in the canvas, you can comment the next line:
 logoImage.src = "sparklight-logo.png";
 
-updateState();
-drawFlyer();
+// ---------------- PRELOAD HEADER LOGOS, THEN INIT ----------------
+const preloadDefault = new Promise(res => { const img = new Image(); img.onload = res; img.src = headerLogos.default; });
+const preloadDone = new Promise(res => { const img = new Image(); img.onload = res; img.src = headerLogos.done; });
+
+Promise.all([preloadDefault, preloadDone]).then(() => {
+  headerLogoImage.src = headerLogos.default;
+  updateState();
+  drawFlyer();
+});

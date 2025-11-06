@@ -1,173 +1,121 @@
 :root {
   --brand: #8d3b91;
-  --bg-deep: #051931;           /* site background */
+  --bg-deep: #051931;
   --card-bg: #ffffff;
   --border-color: #dcdce5;
-  --radius: 10px;
-  --shadow: 0 3px 12px rgba(0,0,0,0.12);
+  --radius: 12px;
   --max-width: 900px;
+  --shadow: 0 4px 14px rgba(0,0,0,0.15);
 }
 
-/* Page */
 body {
   margin: 0;
-  padding: 0;
+  padding: 30px 0;
   background: var(--bg-deep);
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #1f1f23;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Header (above the card, same width as card) */
-#topHeader {
-  width: 100%;
   display: flex;
   justify-content: center;
-  padding: 20px 0 10px;
-}
-#topHeader img {
-  width: 100%;
-  max-width: var(--max-width);
-  height: auto;
-  display: block;
 }
 
-/* Main container */
-#mainContainer {
+.page-container {
   width: 100%;
   max-width: var(--max-width);
-  padding: 0 20px 40px;
+  padding: 0 20px;
 }
 
-/* Form card */
-form {
+.card {
   background: var(--card-bg);
-  padding: 28px 28px 36px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  padding: 20px;
   margin-bottom: 30px;
 }
 
-/* Columns + gutter */
+.header-bar img {
+  width: 100%;
+  border-radius: var(--radius);
+}
+
 .form-columns {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 0; /* keep structural gap at 0; we use padding/border for gutter */
+  gap: 0;
 }
+
 .left-column,
 .right-column {
   flex: 1;
-  min-width: 260px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* visible gutter: border on left column, spacing inside both */
+/* Left column gutter */
 .left-column {
   border-right: 1px solid var(--border-color);
   padding-right: 24px;
   margin-right: 24px;
 }
 
-/* ✅ tiny, safe fix: add a little right padding to the right column */
+/* Right padding fix */
 .right-column {
-  padding-left: 24px;
-  padding-right: 12px; /* NEW: prevents right-edge hugging */
+  padding-right: 14px;
 }
 
-/* Labels/inputs */
-label {
-  font-weight: 600;
-  margin-top: 6px;
-}
+/* Inputs */
 input[type="text"],
 input[type="url"],
 input[type="file"],
-select,
-textarea {
+textarea,
+select {
   width: 100%;
-  font-size: 15px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  padding: 10px;
   border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 15px;
   background: #fafafa;
-  box-sizing: border-box; /* ensure padding doesn’t push width */
-}
-textarea {
-  resize: vertical;
-  min-height: 110px;
 }
 
-/* Effects row (Background Box removed) */
-.effects-row {
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.effects-inline {
   display: flex;
   gap: 24px;
   align-items: center;
-  margin-top: 4px;
-  font-size: 14px;
 }
-.effects-row label { font-weight: 500; }
 
-/* Orientation radios (no label) */
-.orientation-toggle {
+.orientation-group {
   display: flex;
-  gap: 20px;
-  align-items: center;
+  gap: 22px;
   margin-top: 6px;
 }
-.orientation-toggle label { font-weight: 500; }
 
-/* Buttons */
-.buttons-row {
+.button-row {
   display: flex;
-  gap: 15px;
-  justify-content: flex-start;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 10px;
 }
+
 .btn {
   background: var(--brand);
   color: #fff;
   border: none;
-  padding: 12px 20px;
-  border-radius: 50px;
-  font-size: 15px;
+  padding: 10px 18px;
+  border-radius: 40px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.15s ease;
 }
-.btn:hover { filter: brightness(0.9); }
 
-/* Preview area */
-#preview-stage {
-  background: var(--card-bg);
+#preview-stage,
+.preview-card {
   padding: 20px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
+
 #flyerCanvas {
+  display: block;
   width: 100%;
   height: auto;
-  display: block;
-}
-
-/* Responsive: remove the divider when stacked */
-@media (max-width: 700px) {
-  .left-column {
-    border-right: none;
-    padding-right: 0;
-    margin-right: 0;
-    margin-bottom: 16px;
-  }
-  .right-column {
-    padding-left: 0;
-    padding-right: 0; /* mobile lets inputs use full width */
-  }
-  .effects-row,
-  .orientation-toggle {
-    flex-wrap: wrap;
-  }
 }

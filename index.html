@@ -2,33 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Event Flyer Builder</title>
   <link rel="stylesheet" href="flyer.css" />
 </head>
 
 <body>
   <div class="page-container">
-
-    <!-- FORM CARD -->
     <div class="card form-card">
+
       <div class="header-bar">
-        <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
+        <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder">
       </div>
 
-      <form id="flyerForm" autocomplete="off">
+      <form id="flyerForm">
+
         <div class="form-columns">
 
-          <!-- LEFT COLUMN -->
-          <div class="col left-column">
-
-            <label for="eventName">Event Name</label>
+          <!-- LEFT -->
+          <div class="left-column">
+            <label>Event Name</label>
             <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
-            <label for="contestDetails">Contest Entry Details</label>
-            <textarea id="contestDetails" placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
+            <label>Contest Entry Details</label>
+            <textarea id="contestDetails"
+              placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
 
-            <label for="textColorSelect">Text Color</label>
+            <label>Text Color</label>
             <select id="textColorSelect">
               <option value="#A600A5">Bright Purple</option>
               <option value="#2323A4">Purple</option>
@@ -45,56 +45,46 @@
             </select>
 
             <div class="effects-inline">
-              <label><input type="checkbox" id="effectOutline" /> Outline</label>
-              <label><input type="checkbox" id="effectShadow" /> Drop Shadow</label>
+              <label><input type="checkbox" id="effectOutline"> Outline</label>
+              <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
             </div>
 
-            <label for="contestURL">Contest URL</label>
-            <input type="url" id="contestURL" value="https://www.sparklight.com/internet" />
-
+            <label>Contest URL</label>
+            <input type="text" id="contestURL" value="https://www.sparklight.com/internet">
           </div>
 
-          <!-- RIGHT COLUMN -->
-          <div class="col right-column">
-
-            <label for="downloadFormat">Download Format</label>
+          <!-- RIGHT -->
+          <div class="right-column">
+            <label>Download Format</label>
             <select id="downloadFormat">
               <option value="pdf">PDF</option>
               <option value="png">PNG</option>
             </select>
 
             <div class="orientation-group">
-              <label><input type="radio" name="orient" value="portrait" /> Portrait</label>
-              <label><input type="radio" name="orient" value="landscape" checked /> Landscape</label>
+              <label><input type="radio" name="orient" value="portrait"> Portrait</label>
+              <label><input type="radio" name="orient" value="landscape" checked> Landscape</label>
             </div>
 
-            <label id="bgLabel" for="imageUpload">Background Image</label>
-            <input type="file" id="imageUpload" accept="image/*" capture="environment" />
+            <label id="bgLabel">Background Image</label>
+            <input type="file" id="imageUpload" accept="image/*" capture="environment">
 
             <div class="button-row">
-              <button type="button" id="downloadBtn" class="btn">Download</button>
-              <button type="button" id="resetBtn" class="btn btn-gray">Reset</button>
+              <button type="button" id="downloadBtn">Download</button>
+              <button type="button" id="resetBtn">Reset</button>
             </div>
-
           </div>
 
         </div>
       </form>
     </div>
 
-    <!-- PREVIEW (NO CARD WRAPPER) -->
-    <div class="preview-wrap">
+    <!-- PREVIEW -->
+    <div class="card preview-card">
       <canvas id="flyerCanvas"></canvas>
     </div>
-
   </div>
 
-  <!-- LIBRARIES -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- MAIN SCRIPT -->
   <script src="flyer.js"></script>
-
 </body>
 </html>

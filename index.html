@@ -13,22 +13,20 @@
 
 <body>
 
-  <!-- ✅ Full-width header, centered, but max 900px -->
+  <!-- Header spans the card width but sits above it -->
   <header id="topHeader">
     <img src="eventflyerbuilder-logo.png" id="headerImage" alt="Flyer Builder Header" />
   </header>
 
-  <!-- ✅ Main centered container -->
+  <!-- Main container (max 900px) -->
   <div id="mainContainer">
 
     <!-- FORM -->
     <form id="flyerForm">
-
       <div class="form-columns">
 
         <!-- LEFT COLUMN -->
         <div class="left-column">
-
           <label>Event Name</label>
           <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
@@ -52,16 +50,14 @@ Visit Booth 22."></textarea>
             <option value="#000000">Black</option>
           </select>
 
-          <!-- ✅ Text Effects all on one line -->
+          <!-- Text Effects (one row); Background Box removed -->
           <div class="effects-row">
             <label><input type="checkbox" id="effectOutline"> Outline</label>
             <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
-            <label><input type="checkbox" id="effectBox"> Background Box</label>
           </div>
 
           <label>Contest URL</label>
           <input type="url" id="url" value="https://www.sparklight.com/internet" />
-
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -73,7 +69,7 @@ Visit Booth 22."></textarea>
             <option value="jpg">JPG</option>
           </select>
 
-          <label>Orientation</label>
+          <!-- Orientation label removed; radios only -->
           <div class="orientation-toggle">
             <label><input type="radio" name="orientation" value="portrait"> Portrait</label>
             <label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
@@ -86,12 +82,12 @@ Visit Booth 22."></textarea>
             <button type="button" id="saveBtn" class="btn">Download</button>
             <button type="button" id="resetBtn" class="btn">Reset</button>
           </div>
-
         </div>
+
       </div>
     </form>
 
-    <!-- ✅ Preview Output -->
+    <!-- PREVIEW -->
     <div id="preview-stage">
       <canvas id="flyerCanvas"></canvas>
     </div>

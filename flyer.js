@@ -3,25 +3,26 @@ import QRCode from "https://cdn.skypack.dev/qrcode";
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
-// ---------------- HEADER LOGO FILES (REPLACE THESE WITH REAL ONES) ----------------
+// ✅ YOUR REAL HEADER IMAGE FILENAMES
 const headerLogos = {
   default: "eventflyerbuilder-logo.png",
-  done: "eventflyerbuilder-done-logo.png"
+  done: "eventflyerbuilder-done.png"
 };
 
 let headerLogoImage = new Image();
 headerLogoImage.src = headerLogos.default;
 
-// fallback placeholder if missing
+// ✅ SAFE FALLBACK if image missing or broken
 headerLogoImage.onerror = () => {
+  console.warn("Header default image failed to load. Using fallback.");
   headerLogoImage.src =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABkCAYAAADHxVhSAAA...";
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC...";
 };
 
-// Sparklight small logo
 let sparklightLogo = new Image();
 sparklightLogo.src = "sparklight-logo.png";
 sparklightLogo.onerror = () => {
+  console.warn("Sparklight logo missing — skipping.");
   sparklightLogo = null;
 };
 
@@ -52,7 +53,9 @@ function wrapText(ctx, text, maxWidth) {
     if (ctx.measureText(test).width > maxWidth) {
       lines.push(line.trim());
       line = word + " ";
-    } else line = test;
+    } else {
+      line = test;
+    }
   }
 
   if (line.trim()) lines.push(line.trim());
@@ -68,7 +71,6 @@ function contrastColor(hex) {
   return L > 160 ? "#000" : "#fff";
 }
 
-// round rect
 function drawRoundedRect(x,y,w,h,r) {
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -94,7 +96,7 @@ function updateState() {
 
   state.whiteText = document.getElementById("whiteTextToggle").checked;
   state.textColor = document.getElementById("textColorSelect").value;
-  
+
   state.effectOutline = document.getElementById("effectOutline").checked;
   state.effectShadow = document.getElementById("effectShadow").checked;
   state.effectBox = document.getElementById("effectBox").checked;
@@ -142,9 +144,9 @@ async function drawFlyer() {
   ctx.fillStyle = grad;
   ctx.fillRect(0,0,W,H*0.3);
 
-  // header logo
+  // ✅ HEADER LOGO — WITH SAFE CHECK
   if (headerLogoImage.complete && headerLogoImage.naturalWidth > 0) {
-    const lw = W * 0.20;
+    const lw = W * 0.25;
     const aspect = headerLogoImage.width / headerLogoImage.height;
     const lh = lw / aspect;
     ctx.drawImage(headerLogoImage, (W-lw)/2, 20, lw, lh);
@@ -229,7 +231,7 @@ async function drawFlyer() {
 document.querySelectorAll("input, textarea, select").forEach(el => {
   el.addEventListener("input", () => {
     updateState();
-    headerLogoImage.src = headerLogos.done;
+    headerLogoImage.src = headerLogos.done; // ✅ swap to done
     drawFlyer();
   });
 });
@@ -254,8 +256,10 @@ document.getElementById("imageUpload").addEventListener("change", e => {
 // reset
 document.getElementById("resetBtn").addEventListener("click", () => {
   document.getElementById("flyerForm").reset();
+
   headerLogoImage.src = headerLogos.default;
   state.image = null;
+
   drawFlyer();
 });
 

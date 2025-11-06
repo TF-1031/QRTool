@@ -175,16 +175,19 @@ async function drawFlyer(){
   const blockH = lines.length * (fontSize + lineGap) - lineGap;
 
   // B: Center headline in the header zone = between canvas top and TOP of the logo
-  const headerTop = 10;                     // small margin from canvas top
-  const headerBottom = logoTop;             // top edge of logo (not bottom)
-  const headerMid = (headerTop + headerBottom) / 2;
-  let headlineTop = Math.max(10, Math.round(headerMid - blockH/2));
+ // Keep headline firmly between top wash and logo
+const headerTop = 20;
+const headerBottom = logoTop - 20;  // keep a safe gap before logo
+let headlineTop = headerTop + (headerBottom - headerTop - blockH) / 2;
 
-  // Ensure it doesn't collide with the logo
-  const minGap = 12;
-  if (headlineTop + blockH > logoTop - minGap){
-    headlineTop = logoTop - minGap - blockH;
-  }
+// Never allow it to go above visible area
+if (headlineTop < 20) headlineTop = 20;
+
+// Never allow it to overlap the logo
+if (headlineTop + blockH > logoTop - 20) {
+  headlineTop = logoTop - 20 - blockH;
+}
+
 
   // Draw headline
   ctx.font = `bold ${fontSize}px Arial`;
@@ -240,3 +243,4 @@ function handleReset(){
   bgImage = null;
   drawFlyer();
 }
+

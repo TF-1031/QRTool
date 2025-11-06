@@ -9,9 +9,8 @@
 <body>
   <div class="page-container">
 
-    <!-- FORM (white card) -->
+    <!-- Form (white card) -->
     <div class="card form-card">
-      <!-- Header inside the card, spans full width of card -->
       <div class="header-bar">
         <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
       </div>
@@ -43,8 +42,8 @@
             </select>
 
             <div class="effects-inline">
-              <label><input type="checkbox" id="effectOutline"> Outline</label>
-              <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
+              <label><input type="checkbox" id="effectOutline" /> Outline</label>
+              <label><input type="checkbox" id="effectShadow" /> Drop Shadow</label>
             </div>
 
             <label for="contestURL">Contest URL</label>
@@ -60,8 +59,8 @@
             </select>
 
             <div class="orientation-group">
-              <label><input type="radio" name="orient" value="portrait"> Portrait</label>
-              <label><input type="radio" name="orient" value="landscape" checked> Landscape</label>
+              <label><input type="radio" name="orient" value="portrait" /> Portrait</label>
+              <label><input type="radio" name="orient" value="landscape" checked /> Landscape</label>
             </div>
 
             <label id="bgLabel" for="imageUpload">Background Image</label>
@@ -76,16 +75,17 @@
       </form>
     </div>
 
-    <!-- PREVIEW (no white card—just the flyer) -->
+    <!-- Preview (no white card—just the flyer) -->
     <div class="preview-wrap">
       <canvas id="flyerCanvas"></canvas>
     </div>
 
   </div>
 
-  <!-- libs first -->
+  <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <!-- main -->
   <script src="flyer.js"></script>
 </body>

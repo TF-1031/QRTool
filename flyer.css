@@ -41,13 +41,11 @@ body{
 
 .form-columns{
   display:flex;
-  gap:32px;                 /* gutter between columns */
+  gap:32px;
   align-items:flex-start;
 }
 
-.col{
-  flex:1;
-}
+.col{ flex:1; }
 
 .left-column{
   padding-right:18px;
@@ -114,7 +112,6 @@ textarea{
 .btn-gray{ background:#7a7f89; }
 
 .preview-wrap{
-  /* keep just the flyer visible; no white card */
   display:flex;
   justify-content:center;
   padding:10px 0 0;
@@ -127,7 +124,7 @@ textarea{
   max-width:var(--maxw);
   border:1px solid rgba(255,255,255,.15);
   border-radius:10px;
-  background:#ffffff; /* canvas background */
+  background:#ffffff;
 }
 
 /* Mobile responsiveness */

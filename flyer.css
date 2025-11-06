@@ -71,9 +71,11 @@ form {
   border-right: 1px solid var(--border-color);
   padding-right: 24px;
   margin-right: 24px;
+  padding-right: 12px;   /* NEW – right padding inside the column */
 }
 .right-column {
   padding-left: 24px;
+  padding-right: 12px;   /* NEW – right padding for symmetry */
 }
 
 /* Labels/inputs */
@@ -166,3 +168,4 @@ textarea {
     flex-wrap: wrap;
   }
 }
+

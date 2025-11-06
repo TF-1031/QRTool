@@ -1,9 +1,9 @@
-// ===== Elements
+// Elements
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 const headerLogo = document.getElementById("headerLogo");
 
-const eventNameEl = document.getElementById("eventName");
+const eventNameEl = document.getElementById("eventName"); // filename only
 const detailsEl   = document.getElementById("contestDetails");
 const urlEl       = document.getElementById("contestURL");
 const colorEl     = document.getElementById("textColorSelect");
@@ -14,35 +14,30 @@ const imageInput  = document.getElementById("imageUpload");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn    = document.getElementById("resetBtn");
 
-// ===== State
-let bgImage = null;               // background image (optional)
+let bgImage = null;
 
+// On load
 document.addEventListener("DOMContentLoaded", () => {
-  // Mobile hint on label
   if (/Mobi|Android/i.test(navigator.userAgent)) {
     document.getElementById("bgLabel").textContent =
       "Background Image (Choose File or Take a Photo)";
   }
 
-  // Wire inputs
   document.querySelectorAll("#flyerForm input, #flyerForm select, #flyerForm textarea")
     .forEach(el => el.addEventListener("input", () => {
-      // Swap header once user starts editing
       headerLogo.src = "eventflyerbuilder-done.png";
       drawFlyer();
     }));
 
   orientEls.forEach(r => r.addEventListener("change", drawFlyer));
-
   imageInput.addEventListener("change", onImageUpload);
   downloadBtn.addEventListener("click", handleDownload);
   resetBtn.addEventListener("click", handleReset);
 
-  // Initial render in whichever radio is checked
   drawFlyer();
 });
 
-// ===== Title case (MLA with acronym protection)
+// Title case (MLA-ish with acronym protection)
 function toMLATitleCase(text){
   const always = ["TV","USA","UK","HD","4K","UHD"];
   return text.split(/\s+/).map(w=>{
@@ -51,7 +46,7 @@ function toMLATitleCase(text){
   }).join(" ");
 }
 
-// ===== Filename like MAR25
+// Filename like NOV25
 function makeFilename(name){
   const now = new Date();
   const mons = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -59,7 +54,6 @@ function makeFilename(name){
   return (name.trim() || "Flyer").replace(/\s+/g,"_") + "_" + tag;
 }
 
-// ===== Image upload
 function onImageUpload(e){
   const file = e.target.files?.[0];
   if (!file) return;
@@ -72,7 +66,15 @@ function onImageUpload(e){
   reader.readAsDataURL(file);
 }
 
-// ===== Word wrap helper for a fixed content width
+function loadImage(src){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 function wrapText(text, fontSize, maxWidth){
   ctx.font = `bold ${fontSize}px Arial`;
   const words = text.split(/\s+/);
@@ -91,9 +93,8 @@ function wrapText(text, fontSize, maxWidth){
   return lines;
 }
 
-// ===== Draw flyer (auto-sizes to orientation)
 async function drawFlyer(){
-  // Dimensions by orientation (default = checked radio)
+  // Orientation
   const orient = document.querySelector("input[name='orient']:checked").value;
   const W = (orient === "portrait") ? 850 : 1100;
   const H = (orient === "portrait") ? 1100 : 850;
@@ -101,11 +102,10 @@ async function drawFlyer(){
   canvas.width = W;
   canvas.height = H;
 
-  // White canvas background
+  // Background
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0,0,W,H);
 
-  // Background image, if present (cover fully)
   if (bgImage){
     const scale = Math.max(W / bgImage.naturalWidth, H / bgImage.naturalHeight);
     const bw = bgImage.naturalWidth * scale;
@@ -114,7 +114,7 @@ async function drawFlyer(){
     const by = (H - bh) / 2;
     ctx.drawImage(bgImage, bx, by, bw, bh);
 
-    // Top gradient wash to keep header/text readable
+    // Top wash for readability
     const grad = ctx.createLinearGradient(0,0,0,Math.min(0.45*H,360));
     grad.addColorStop(0,"rgba(255,255,255,0.92)");
     grad.addColorStop(1,"rgba(255,255,255,0)");
@@ -122,29 +122,30 @@ async function drawFlyer(){
     ctx.fillRect(0,0,W,Math.min(0.45*H,360));
   }
 
-  // Sparklight logo: draw PNG crisp with natural aspect ratio
+  // Logo
   const brand = await loadImage("sparklight-logo.png");
   const maxLogoW = Math.min(260, W * 0.26);
   const scale = maxLogoW / brand.naturalWidth;
   const logoW = brand.naturalWidth * scale;
   const logoH = brand.naturalHeight * scale;
   const logoX = (W - logoW)/2;
-  const logoY = 40;
+  const logoY = 40;                        // top padding
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(brand, logoX, logoY, logoW, logoH);
+  const logoTop = logoY;                    // top edge of the logo (for B)
+  const logoBottom = logoY + logoH;
 
-  // Read values
-  const titleRaw   = eventNameEl.value.trim();
+  // Read inputs
   const detailsRaw = detailsEl.value.trim();
+  const details    = toMLATitleCase(detailsRaw);
   const url        = (urlEl.value.trim() || "https://www.sparklight.com/internet");
-  const color      = colorEl.value;
+  const textColor  = colorEl.value;
   const outline    = outlineEl.checked;
   const shadow     = shadowEl.checked;
 
-  // Text setup
+  // Set text styles
   ctx.textAlign = "center";
-  ctx.fillStyle = color;
   if (shadow){
     ctx.shadowColor = "rgba(0,0,0,0.4)";
     ctx.shadowBlur = 6;
@@ -161,57 +162,58 @@ async function drawFlyer(){
     ctx.strokeStyle = "#FFFFFF";
   }
 
-  // Title (MLA with acronym protection)
-  const title = toMLATitleCase(titleRaw);
-  ctx.font = "bold 52px Arial";
-  const titleY = logoY + logoH + 60;
-  if (outline) ctx.strokeText(title, W/2, titleY);
-  ctx.fillText(title, W/2, titleY);
-
-  // Contest details (start big and only shrink to keep ≤2 lines)
-  let fontSize = 52;
-  const detailsMaxWidth = Math.min(0.75*W, 800);
-  let lines = wrapText(detailsRaw, fontSize, detailsMaxWidth);
+  // ---- MAIN HEADLINE (Contest Entry Details) ----
+  // Start large and shrink to keep ≤2 lines
+  let fontSize = 64;
+  const maxWidth = Math.min(0.78*W, 800);
+  let lines = wrapText(details, fontSize, maxWidth);
   while (lines.length > 2 && fontSize > 26){
     fontSize -= 2;
-    lines = wrapText(detailsRaw, fontSize, detailsMaxWidth);
+    lines = wrapText(details, fontSize, maxWidth);
   }
+  const lineGap = 10;
+  const blockH = lines.length * (fontSize + lineGap) - lineGap;
+
+  // B: Center headline in the header zone = between canvas top and TOP of the logo
+  const headerTop = 10;                     // small margin from canvas top
+  const headerBottom = logoTop;             // top edge of logo (not bottom)
+  const headerMid = (headerTop + headerBottom) / 2;
+  let headlineTop = Math.max(10, Math.round(headerMid - blockH/2));
+
+  // Ensure it doesn't collide with the logo
+  const minGap = 12;
+  if (headlineTop + blockH > logoTop - minGap){
+    headlineTop = logoTop - minGap - blockH;
+  }
+
+  // Draw headline
   ctx.font = `bold ${fontSize}px Arial`;
-  const detailsTop = titleY + 40;
+  ctx.fillStyle = textColor;
   lines.forEach((line, i) => {
-    const y = detailsTop + i * (fontSize + 10);
+    const y = headlineTop + i * (fontSize + lineGap);
     if (outline) ctx.strokeText(line, W/2, y);
     ctx.fillText(line, W/2, y);
   });
 
-  // QR code
+  // ---- QR CODE ----
   const qrSize = Math.min(300, W*0.27);
   const qrDataURL = await QRCode.toDataURL(url);
   const qrImg = await loadImage(qrDataURL);
-  const qrX = (W - qrSize)/2;
-  const qrY = detailsTop + Math.max(1, lines.length) * (fontSize + 10) + 40;
+
+  // Place QR comfortably below the logo (and below headline, in case headline drifted down)
+  const qrTop = Math.max(logoBottom + 40, headlineTop + blockH + 40, H * 0.40);
   ctx.shadowColor = "transparent";
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+  ctx.drawImage(qrImg, (W - qrSize)/2, qrTop, qrSize, qrSize);
 
-  // Label
+  // ---- Scan label (same color as headline)
   ctx.font = "bold 24px Arial";
-  ctx.fillStyle = "#000000";
-  ctx.fillText("Scan to Enter", W/2, qrY + qrSize + 30);
+  ctx.fillStyle = textColor;
+  ctx.fillText("Scan to Enter", W/2, qrTop + qrSize + 30);
 }
 
-// helper image loader
-function loadImage(src){
-  return new Promise((resolve, reject)=>{
-    const img = new Image();
-    img.onload = ()=>resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-// ===== Download
+// Download
 async function handleDownload(){
-  await drawFlyer(); // ensure up-to-date
+  await drawFlyer();
   const fmt = document.getElementById("downloadFormat").value;
   const name = makeFilename(eventNameEl.value || "Flyer");
 
@@ -231,10 +233,10 @@ async function handleDownload(){
   }
 }
 
-// ===== Reset
+// Reset
 function handleReset(){
   document.getElementById("flyerForm").reset();
   headerLogo.src = "eventflyerbuilder-logo.png";
   bgImage = null;
-  drawFlyer(); // redraw with defaults
+  drawFlyer();
 }

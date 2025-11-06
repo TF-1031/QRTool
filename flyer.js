@@ -207,13 +207,57 @@ async function drawFlyer() {
     40
   ) / 2;
 
-  ctx.fillStyle = state.whiteText ? "#ffffff" : BRAND_COLOR;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
+onst textX = W / 2;
 
-  lines.forEach((line, i) => {
-    ctx.fillText(line, W / 2, contentTopY + i * lineSpacing);
-  });
+// TEXT BACKGROUND BOX
+if (state.effectBox) {
+  const paddingX = 20;
+  const paddingY = 10;
+
+  const boxWidth = maxTextWidth + paddingX * 2;
+  const boxHeight = textBlockHeight + paddingY * 2;
+
+  ctx.fillStyle = "#ffffffaa"; // semi-white
+  ctx.strokeStyle = "#00000022";
+
+  ctx.roundRect(
+    textX - boxWidth / 2,
+    contentTopY - paddingY,
+    boxWidth,
+    boxHeight,
+    10
+  );
+  ctx.fill();
+}
+
+// TEXT EFFECTS
+lines.forEach((line, i) => {
+  const y = contentTopY + i * lineSpacing;
+
+  // Outline
+  if (state.effectOutline) {
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#000000";
+    ctx.strokeText(line, textX, y);
+  }
+
+  // Shadow
+  if (state.effectShadow) {
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+  } else {
+    ctx.shadowColor = "transparent";
+  }
+
+  // Actual fill text
+  ctx.fillStyle = state.textColor;
+  ctx.fillText(line, textX, y);
+});
+
+// Reset shadows for rest of drawing
+ctx.shadowColor = "transparent";
 
 
   // ---------------- QR CODE ----------------
@@ -254,3 +298,4 @@ logoImage.src = "sparklight-logo.png";
 
 updateState();
 drawFlyer();
+

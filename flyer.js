@@ -1,309 +1,185 @@
-import QRCode from "https://cdn.skypack.dev/qrcode";
-
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
-const HEADER_NORMAL = "eventflyerbuilder-logo.png";
-const HEADER_DONE   = "eventflyerbuilder-done.png";
-const headerImageEl = document.getElementById("headerImage");
+const headerLogo = document.getElementById("headerLogo");
 
-let headerSwapped = false;
-
-const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-
-const state = {
-  orientation: document.querySelector('input[name="orientation"]:checked')?.value || "landscape",
-  eventName: "",
-  contestDetailsRaw: "",
-  contestDetails: "",   // transformed to MLA Title Case (with acronyms preserved)
-  url: "https://www.sparklight.com/internet",
-  image: null,
-  logo: null,           // sparklight logo image
-  textColor: "#A600A5",
-  effectOutline: false, // white outline
-  effectShadow: false   // drop shadow
-};
-
-/* ---------- MLA Title Case with Acronym Preservation ----------
-   - Keeps ALL-CAPS tokens as-is (TV, USA)
-   - Keeps tokens with internal caps as-is (eBay, iPhone, NASA)
-   - Applies MLA small-words rule otherwise
-*/
-function mlaTitleCasePreserveAcronyms(input) {
-  if (!input) return "";
-  const smallWords = new Set([
-    "a","an","and","as","at","but","by","for","in","nor","of","on","or","so","the","to","up","yet","with"
-  ]);
-
-  const words = input.split(/\s+/);
-
-  return words.map((word, idx) => {
-    const isFirstOrLast = idx === 0 || idx === words.length - 1;
-
-    // Preserve as-is if the user used all caps or internal caps
-    const hasInternalCaps = /[A-Z].*[A-Z]|[A-Z][a-z]+[A-Z]/.test(word) || (/[A-Z]/.test(word) && /[a-z]/.test(word) === false);
-    if (hasInternalCaps) return word;
-
-    const lower = word.toLowerCase();
-
-    if (!isFirstOrLast && smallWords.has(lower)) {
-      return lower;
-    }
-
-    // Capitalize first letter only
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
-  }).join(" ");
+// MOBILE: change background image label
+const bgLabel = document.getElementById("bgLabel");
+if (/Mobi|Android/i.test(navigator.userAgent)) {
+  bgLabel.textContent = "Background Image (Choose a File or Take a Photo)";
 }
 
-/* ---------- Filename helpers ---------- */
-function sanitizeFilename(name) {
-  return (name || "flyer").trim().replace(/[^a-zA-Z0-9 _-]/g, "").replace(/\s+/g, "_").toUpperCase();
-}
-function shortMonthYearNow() {
-  const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-  const d = new Date();
-  const mm = MONTHS[d.getMonth()];
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${mm}${yy}`;
-}
-
-/* ---------- Text wrap / autoscale ---------- */
-function wrapText(width, text, fontSize) {
-  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-  const words = (text || "").split(/\s+/);
-  const lines = [];
-  let line = "";
-  for (const w of words) {
-    const test = line ? `${line} ${w}` : w;
-    if (ctx.measureText(test).width > width) {
-      if (line) lines.push(line);
-      line = w;
-    } else {
-      line = test;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-function autoScaleTextToLines(text, width, maxLines, startSize, minSize=10, step=2) {
-  let size = startSize;
-  while (size >= minSize) {
-    const lines = wrapText(width, text, size);
-    if (lines.length <= maxLines) return { fontSize: size, lines };
-    size -= step;
-  }
-  return { fontSize: minSize, lines: wrapText(width, text, minSize) };
+// ---------------------------
+// MLA-style Title Case WITH acronym protection
+// ---------------------------
+function toMLATitleCase(text) {
+  const alwaysCap = ["TV", "USA", "UK", "HD", "4K"];
+  return text
+    .split(" ")
+    .map(word => {
+      if (alwaysCap.includes(word.toUpperCase())) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" ");
 }
 
-/* ---------- State update ---------- */
-function updateStateFromInputs() {
-  state.orientation = document.querySelector('input[name="orientation"]:checked').value;
-  state.eventName = document.getElementById("eventName").value.trim();
-  state.contestDetailsRaw = document.getElementById("contestDetails").value.trim();
-  state.contestDetails = mlaTitleCasePreserveAcronyms(state.contestDetailsRaw);
-  state.url = document.getElementById("url").value.trim();
-  state.textColor = document.getElementById("textColorSelect").value;
-  state.effectOutline = document.getElementById("effectOutline").checked;
-  state.effectShadow = document.getElementById("effectShadow").checked;
+// ---------------------------
+// Filename generator
+// ---------------------------
+function makeFilename(eventName) {
+  const now = new Date();
+  const monthNames = [
+    "JAN","FEB","MAR","APR","MAY","JUN",
+    "JUL","AUG","SEP","OCT","NOV","DEC"
+  ];
 
-  // Header swap: show DONE if any meaningful text present
-  if ((state.eventName || state.contestDetailsRaw) && !headerSwapped) {
-    headerSwapped = true;
-    headerImageEl.src = HEADER_DONE;
-  } else if (!state.eventName && !state.contestDetailsRaw) {
-    headerSwapped = false;
-    headerImageEl.src = HEADER_NORMAL;
-  }
+  const mon = monthNames[now.getMonth()];
+  const yr = now.getFullYear().toString().slice(-2);
+
+  return `${eventName.replace(/\s+/g, "_")}_${mon}${yr}`;
 }
 
-/* ---------- Listeners ---------- */
-document.querySelectorAll("input, textarea, select").forEach(el => {
-  el.addEventListener("input", async () => {
-    updateStateFromInputs();
-    await drawFlyer();
-  });
-});
-
-document.getElementById("imageUpload").addEventListener("change", async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = evt => {
-    const img = new Image();
-    img.onload = async () => {
-      state.image = img;
-      await drawFlyer();
-    };
-    img.src = evt.target.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById("resetBtn").addEventListener("click", async () => {
-  document.getElementById("flyerForm").reset();
-  headerSwapped = false;
-  headerImageEl.src = HEADER_NORMAL;
-
-  state.eventName = "";
-  state.contestDetailsRaw = "";
-  state.contestDetails = "";
-  state.url = "https://www.sparklight.com/internet";
-  state.textColor = "#A600A5";
-  state.effectOutline = false;
-  state.effectShadow = false;
-  state.image = null;
-
-  await drawFlyer();
-});
-
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const format = document.getElementById("downloadFormat").value;
-
-  const base = sanitizeFilename(state.eventName || "FLYER");
-  const short = shortMonthYearNow();  // e.g., MAR25
-  const fileBase = `${base}_${short}`;
-
-  if (format === "jpg") {
-    const a = document.createElement("a");
-    a.download = `${fileBase}.jpg`;
-    a.href = canvas.toDataURL("image/jpeg", 0.92);
-    a.click();
-    return;
-  }
-
-  if (format === "pdf") {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: state.orientation === "portrait" ? "p" : "l",
-      unit: "pt",
-      format: [canvas.width, canvas.height]
-    });
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`${fileBase}.pdf`);
-  }
-});
-
-/* ---------- Drawing ---------- */
+// ---------------------------
+// Draw Flyer
+// ---------------------------
 async function drawFlyer() {
-  const W = state.orientation === "portrait" ? 850 : 1100;
-  const H = state.orientation === "portrait" ? 1100 : 850;
 
+  // Header swap when user edits
+  headerLogo.src = "eventflyerbuilder-done.png";
+
+  const W = 1100;
+  const H = 850;
   canvas.width = W;
   canvas.height = H;
 
-  // base white
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "white";
   ctx.fillRect(0, 0, W, H);
 
-  // background image cover + gentle fade
-  if (state.image) {
-    const img = state.image;
-    const arImg = img.width / img.height;
-    const arCan = W / H;
-    let dw, dh, ox, oy;
-    if (arImg > arCan) { dh = H; dw = dh * arImg; ox = (W - dw)/2; oy = 0; }
-    else { dw = W; dh = dw / arImg; ox = 0; oy = (H - dh)/2; }
-    ctx.globalAlpha = 0.4;
-    ctx.drawImage(img, ox, oy, dw, dh);
-    ctx.globalAlpha = 1;
+  const eventName = document.getElementById("eventName").value.trim();
+  const contestDetails = document.getElementById("contestDetails").value.trim();
+  const url = document.getElementById("contestURL").value.trim();
 
-    // soft top fade
-    const grad = ctx.createLinearGradient(0,0,0,H*0.35);
-    grad.addColorStop(0,"rgba(255,255,255,1)");
-    grad.addColorStop(1,"rgba(255,255,255,0)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,W,H*0.35);
-  }
+  const textColor = document.getElementById("textColorSelect").value;
+  const outline = document.getElementById("effectOutline").checked;
+  const shadow = document.getElementById("effectShadow").checked;
 
-  // Sparklight logo (pink circle area from your diagram)
-  if (state.logo) {
-    const lw = Math.max(W * 0.20, 140);
-    const lh = lw / (state.logo.width / state.logo.height);
-    const padTop = 10; // exactly 10px from top
-    ctx.drawImage(state.logo, (W - lw)/2, padTop, lw, lh);
-  }
+  // ORIENTATION
+  const orient = document.querySelector("input[name='orient']:checked").value;
 
-  // Title (auto-fit to 2 lines)
-  const qrSize = W * 0.25;
-  const maxTextWidth = qrSize * 2.5;
-  const initialFontSize = qrSize * 0.26;
+  // Draw header logo in preview
+  const brandLogo = new Image();
+  brandLogo.src = "sparklight-logo.png";
 
-  const { fontSize, lines } =
-    autoScaleTextToLines(state.contestDetails, maxTextWidth, 2, initialFontSize);
+  await brandLogo.decode();
+  ctx.drawImage(brandLogo, W/2 - 150, 40, 300, 80);
 
-  const lineSpacing = fontSize * 1.1;
-  const textBlockHeight = lines.length * lineSpacing;
-  const contentTopY = H / 2 - (textBlockHeight + qrSize + 60) / 2;
-
+  // TEXT EFFECTS
+  ctx.fillStyle = textColor;
   ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+  ctx.font = "bold 48px Arial";
+
+  if (shadow) {
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+  } else {
+    ctx.shadowColor = "transparent";
+  }
+
+  if (outline) {
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "white"; 
+  }
+
+  // Event Name in Title Case
+  const titleText = toMLATitleCase(eventName);
+  if (outline) ctx.strokeText(titleText, W/2, 180);
+  ctx.fillText(titleText, W/2, 180);
+
+  // Contest Details (wrapped, 2-line shrink)
+  let fontSize = 42;
+  ctx.font = `bold ${fontSize}px Arial`;
+
+  const maxWidth = 800;
+  let lines = wrapText(contestDetails, fontSize);
+
+  while (lines.length > 2 && fontSize > 22) {
+    fontSize -= 2;
+    ctx.font = `bold ${fontSize}px Arial`;
+    lines = wrapText(contestDetails, fontSize);
+  }
 
   lines.forEach((line, i) => {
-    const y = contentTopY + i * lineSpacing;
+    const yPos = 260 + i * (fontSize + 10);
+    if (outline) ctx.strokeText(line, W/2, yPos);
+    ctx.fillText(line, W/2, yPos);
+  });
 
-    // Shadow
-    if (state.effectShadow) {
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 4;
-      ctx.shadowOffsetY = 4;
+  // QR Code Section
+  ctx.font = "bold 24px Arial";
+  ctx.shadowColor = "transparent";
+
+  const QR = await QRCode.toDataURL(url);
+  const qrImg = new Image();
+  qrImg.src = QR;
+  await qrImg.decode();
+  ctx.drawImage(qrImg, W/2 - 150, 350, 300, 300);
+
+  ctx.fillStyle = "black";
+  ctx.fillText("Scan to Enter", W/2, 690);
+}
+
+// ---------------------------
+// Word wrap helper
+// ---------------------------
+function wrapText(text, size) {
+  ctx.font = `bold ${size}px Arial`;
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+
+  words.forEach(word => {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > 800) {
+      lines.push(line);
+      line = word + " ";
     } else {
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
+      line = test;
     }
-
-    // Outline (white as requested)
-    if (state.effectOutline) {
-      ctx.lineWidth = Math.max(2, Math.round(fontSize * 0.10));
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.strokeText(line, W / 2, y);
-    }
-
-    ctx.fillStyle = state.textColor;
-    ctx.fillText(line, W / 2, y);
   });
 
-  // QR box (white box width controls the header matching width visually)
-  const qrPadding = qrSize * 0.10;
-  const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = contentTopY + textBlockHeight + 35;
-  const qrTotalHeight = qrSize + qrPadding * 2 + 40;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(boxX, boxY, qrSize + qrPadding * 2, qrTotalHeight);
-
-  const qrDataURL = await QRCode.toDataURL(state.url, {
-    width: Math.round(qrSize),
-    margin: 0,
-    color: { dark: "#000000", light: "#ffffff" }
-  });
-
-  const qrImg = await loadImage(qrDataURL);
-  ctx.drawImage(qrImg, boxX + qrPadding, boxY + qrPadding, qrSize, qrSize);
-
-  ctx.fillStyle = "#000000";
-  ctx.font = `bold ${qrSize * 0.09}px ${FONT_STACK}`;
-  ctx.fillText("Scan to Enter", W / 2, boxY + qrSize + qrPadding + 10);
+  lines.push(line.trim());
+  return lines;
 }
 
-/* ---------- Utilities ---------- */
-function loadImage(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.src = src;
-  });
-}
+// ---------------------------
+// Event listeners
+// ---------------------------
+document.querySelectorAll("#flyerForm input, #flyerForm select, #flyerForm textarea")
+  .forEach(el => el.addEventListener("input", drawFlyer));
 
-/* ---------- Load Sparklight logo, then init ---------- */
-const logoImg = new Image();
-logoImg.onload = () => { state.logo = logoImg; drawFlyer(); };
-logoImg.src = "sparklight-logo.png";
+document.getElementById("resetBtn").addEventListener("click", () => {
+  headerLogo.src = "eventflyerbuilder-logo.png";
+  document.getElementById("flyerForm").reset();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+});
 
-/* ---------- Kickoff ---------- */
-updateStateFromInputs();
-drawFlyer();
+document.getElementById("downloadBtn").addEventListener("click", async () => {
+  await drawFlyer();
+
+  const fmt = document.getElementById("downloadFormat").value;
+  const name = makeFilename(document.getElementById("eventName").value || "Flyer");
+
+  if (fmt === "png") {
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}.png`;
+    a.click();
+  } else {
+    const pdf = new jspdf.jsPDF("l", "pt", [canvas.width, canvas.height]);
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0);
+    pdf.save(`${name}.pdf`);
+  }
+});

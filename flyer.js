@@ -3,60 +3,120 @@ import QRCode from "https://cdn.skypack.dev/qrcode";
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
-// ✅ Header images
 const HEADER_NORMAL = "eventflyerbuilder-logo.png";
-const HEADER_DONE = "eventflyerbuilder-done.png";
+const HEADER_DONE   = "eventflyerbuilder-done.png";
+const headerImageEl = document.getElementById("headerImage");
 
-// ✅ Track when text has been typed
 let headerSwapped = false;
+
+const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 
 const state = {
   orientation: document.querySelector('input[name="orientation"]:checked')?.value || "landscape",
   eventName: "",
-  contestDetails: "",
+  contestDetailsRaw: "",
+  contestDetails: "",   // transformed to MLA Title Case (with acronyms preserved)
   url: "https://www.sparklight.com/internet",
   image: null,
-  logo: null,
+  logo: null,           // sparklight logo image
   textColor: "#A600A5",
-  effectOutline: false,
-  effectShadow: false,
-  effectBox: false,
+  effectOutline: false, // white outline
+  effectShadow: false   // drop shadow
 };
 
-const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+/* ---------- MLA Title Case with Acronym Preservation ----------
+   - Keeps ALL-CAPS tokens as-is (TV, USA)
+   - Keeps tokens with internal caps as-is (eBay, iPhone, NASA)
+   - Applies MLA small-words rule otherwise
+*/
+function mlaTitleCasePreserveAcronyms(input) {
+  if (!input) return "";
+  const smallWords = new Set([
+    "a","an","and","as","at","but","by","for","in","nor","of","on","or","so","the","to","up","yet","with"
+  ]);
 
-// ----------------------------
-// UPDATE STATE FROM INPUTS
-// ----------------------------
+  const words = input.split(/\s+/);
+
+  return words.map((word, idx) => {
+    const isFirstOrLast = idx === 0 || idx === words.length - 1;
+
+    // Preserve as-is if the user used all caps or internal caps
+    const hasInternalCaps = /[A-Z].*[A-Z]|[A-Z][a-z]+[A-Z]/.test(word) || (/[A-Z]/.test(word) && /[a-z]/.test(word) === false);
+    if (hasInternalCaps) return word;
+
+    const lower = word.toLowerCase();
+
+    if (!isFirstOrLast && smallWords.has(lower)) {
+      return lower;
+    }
+
+    // Capitalize first letter only
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(" ");
+}
+
+/* ---------- Filename helpers ---------- */
+function sanitizeFilename(name) {
+  return (name || "flyer").trim().replace(/[^a-zA-Z0-9 _-]/g, "").replace(/\s+/g, "_").toUpperCase();
+}
+function shortMonthYearNow() {
+  const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const d = new Date();
+  const mm = MONTHS[d.getMonth()];
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}${yy}`;
+}
+
+/* ---------- Text wrap / autoscale ---------- */
+function wrapText(width, text, fontSize) {
+  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
+  const words = (text || "").split(/\s+/);
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (ctx.measureText(test).width > width) {
+      if (line) lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function autoScaleTextToLines(text, width, maxLines, startSize, minSize=10, step=2) {
+  let size = startSize;
+  while (size >= minSize) {
+    const lines = wrapText(width, text, size);
+    if (lines.length <= maxLines) return { fontSize: size, lines };
+    size -= step;
+  }
+  return { fontSize: minSize, lines: wrapText(width, text, minSize) };
+}
+
+/* ---------- State update ---------- */
 function updateStateFromInputs() {
   state.orientation = document.querySelector('input[name="orientation"]:checked').value;
   state.eventName = document.getElementById("eventName").value.trim();
-  state.contestDetails = document.getElementById("contestDetails").value.trim();
+  state.contestDetailsRaw = document.getElementById("contestDetails").value.trim();
+  state.contestDetails = mlaTitleCasePreserveAcronyms(state.contestDetailsRaw);
   state.url = document.getElementById("url").value.trim();
-
   state.textColor = document.getElementById("textColorSelect").value;
-
   state.effectOutline = document.getElementById("effectOutline").checked;
   state.effectShadow = document.getElementById("effectShadow").checked;
-  state.effectBox = document.getElementById("effectBox").checked;
 
-  // ✅ Header image swap once user types anything
-  const headerImage = document.getElementById("headerImage");
-
-  if (state.eventName || state.contestDetails) {
-    if (!headerSwapped) {
-      headerSwapped = true;
-      headerImage.src = HEADER_DONE;
-    }
-  } else {
+  // Header swap: show DONE if any meaningful text present
+  if ((state.eventName || state.contestDetailsRaw) && !headerSwapped) {
+    headerSwapped = true;
+    headerImageEl.src = HEADER_DONE;
+  } else if (!state.eventName && !state.contestDetailsRaw) {
     headerSwapped = false;
-    headerImage.src = HEADER_NORMAL;
+    headerImageEl.src = HEADER_NORMAL;
   }
 }
 
-// ----------------------------
-// INPUT EVENTS
-// ----------------------------
+/* ---------- Listeners ---------- */
 document.querySelectorAll("input, textarea, select").forEach(el => {
   el.addEventListener("input", async () => {
     updateStateFromInputs();
@@ -64,52 +124,51 @@ document.querySelectorAll("input, textarea, select").forEach(el => {
   });
 });
 
-// Background Image Upload
 document.getElementById("imageUpload").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
+  const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = evt => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       state.image = img;
-      drawFlyer();
+      await drawFlyer();
     };
     img.src = evt.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-// Reset Button
-document.getElementById("resetBtn").addEventListener("click", () => {
+document.getElementById("resetBtn").addEventListener("click", async () => {
   document.getElementById("flyerForm").reset();
   headerSwapped = false;
-  document.getElementById("headerImage").src = HEADER_NORMAL;
+  headerImageEl.src = HEADER_NORMAL;
 
   state.eventName = "";
+  state.contestDetailsRaw = "";
   state.contestDetails = "";
   state.url = "https://www.sparklight.com/internet";
   state.textColor = "#A600A5";
-
   state.effectOutline = false;
   state.effectShadow = false;
-  state.effectBox = false;
-
   state.image = null;
 
-  drawFlyer();
+  await drawFlyer();
 });
 
-// Save Button
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const format = document.getElementById("downloadFormat").value;
-  const baseName = sanitizeFilename(state.eventName || "flyer");
+
+  const base = sanitizeFilename(state.eventName || "FLYER");
+  const short = shortMonthYearNow();  // e.g., MAR25
+  const fileBase = `${base}_${short}`;
 
   if (format === "jpg") {
-    const link = document.createElement("a");
-    link.download = `${baseName}.jpg`;
-    link.href = canvas.toDataURL("image/jpeg", 0.92);
-    link.click();
+    const a = document.createElement("a");
+    a.download = `${fileBase}.jpg`;
+    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.click();
+    return;
   }
 
   if (format === "pdf") {
@@ -121,54 +180,11 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     });
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
     pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`${baseName}.pdf`);
+    pdf.save(`${fileBase}.pdf`);
   }
 });
 
-function sanitizeFilename(name) {
-  return name.trim().replace(/[^a-zA-Z0-9 _-]/g, "").replace(/\s+/g, "_");
-}
-
-// ----------------------------
-// TEXT WRAP + AUTO-SCALE LOGIC
-// ----------------------------
-function getWrappedLines(text, maxWidth, fontSize) {
-  ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
-  const words = text.split(" ");
-  const lines = [];
-  let line = "";
-
-  for (let word of words) {
-    const testLine = line + word + " ";
-    if (ctx.measureText(testLine).width > maxWidth) {
-      lines.push(line.trim());
-      line = word + " ";
-    } else {
-      line = testLine;
-    }
-  }
-  if (line.trim()) lines.push(line.trim());
-
-  return lines;
-}
-
-function autoScaleText(text, maxWidth, maxLines, initialFontSize) {
-  let fontSize = initialFontSize;
-
-  while (fontSize > 10) {
-    const lines = getWrappedLines(text, maxWidth, fontSize);
-    if (lines.length <= maxLines) {
-      return { fontSize, lines };
-    }
-    fontSize -= 2;
-  }
-
-  return { fontSize: 10, lines: getWrappedLines(text, maxWidth, 10) };
-}
-
-// ----------------------------
-// MAIN DRAWING FUNCTION
-// ----------------------------
+/* ---------- Drawing ---------- */
 async function drawFlyer() {
   const W = state.orientation === "portrait" ? 850 : 1100;
   const H = state.orientation === "portrait" ? 1100 : 850;
@@ -176,79 +192,58 @@ async function drawFlyer() {
   canvas.width = W;
   canvas.height = H;
 
+  // base white
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Background image
+  // background image cover + gentle fade
   if (state.image) {
-    const imgAspect = state.image.width / state.image.height;
-    const canvasAspect = W / H;
-
-    let drawW, drawH, offsetX, offsetY;
-
-    if (imgAspect > canvasAspect) {
-      drawH = H;
-      drawW = drawH * imgAspect;
-      offsetX = (W - drawW) / 2;
-      offsetY = 0;
-    } else {
-      drawW = W;
-      drawH = drawW / imgAspect;
-      offsetX = 0;
-      offsetY = (H - drawH) / 2;
-    }
-
+    const img = state.image;
+    const arImg = img.width / img.height;
+    const arCan = W / H;
+    let dw, dh, ox, oy;
+    if (arImg > arCan) { dh = H; dw = dh * arImg; ox = (W - dw)/2; oy = 0; }
+    else { dw = W; dh = dw / arImg; ox = 0; oy = (H - dh)/2; }
     ctx.globalAlpha = 0.4;
-    ctx.drawImage(state.image, offsetX, offsetY, drawW, drawH);
-    ctx.globalAlpha = 1.0;
+    ctx.drawImage(img, ox, oy, dw, dh);
+    ctx.globalAlpha = 1;
+
+    // soft top fade
+    const grad = ctx.createLinearGradient(0,0,0,H*0.35);
+    grad.addColorStop(0,"rgba(255,255,255,1)");
+    grad.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H*0.35);
   }
 
-  // Sparklight logo
+  // Sparklight logo (pink circle area from your diagram)
   if (state.logo) {
-    const logoWidth = Math.max(W * 0.20, 120);
-    const logoHeight = logoWidth / (state.logo.width / state.logo.height);
-    ctx.drawImage(state.logo, (W - logoWidth) / 2, 20, logoWidth, logoHeight);
+    const lw = Math.max(W * 0.20, 140);
+    const lh = lw / (state.logo.width / state.logo.height);
+    const padTop = 10; // exactly 10px from top
+    ctx.drawImage(state.logo, (W - lw)/2, padTop, lw, lh);
   }
 
-  // Text block
+  // Title (auto-fit to 2 lines)
   const qrSize = W * 0.25;
-  const qrPadding = qrSize * 0.10;
-
-  const maxTextWidth = W * 0.70;
+  const maxTextWidth = qrSize * 2.5;
   const initialFontSize = qrSize * 0.26;
 
-  const { fontSize, lines } = autoScaleText(
-    state.contestDetails,
-    maxTextWidth,
-    2,
-    initialFontSize
-  );
+  const { fontSize, lines } =
+    autoScaleTextToLines(state.contestDetails, maxTextWidth, 2, initialFontSize);
 
   const lineSpacing = fontSize * 1.1;
   const textBlockHeight = lines.length * lineSpacing;
+  const contentTopY = H / 2 - (textBlockHeight + qrSize + 60) / 2;
 
-  const topY = H / 2 - (textBlockHeight + qrSize + 60) / 2;
-
-  // Effects
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = `900 ${fontSize}px ${FONT_STACK}`;
 
   lines.forEach((line, i) => {
-    const y = topY + i * lineSpacing;
+    const y = contentTopY + i * lineSpacing;
 
-    if (state.effectBox) {
-      const metrics = ctx.measureText(line);
-      const padding = 18;
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      ctx.fillRect(
-        W / 2 - metrics.width / 2 - padding,
-        y - padding / 2,
-        metrics.width + padding * 2,
-        fontSize + padding
-      );
-    }
-
+    // Shadow
     if (state.effectShadow) {
       ctx.shadowColor = "rgba(0,0,0,0.55)";
       ctx.shadowBlur = 8;
@@ -256,11 +251,15 @@ async function drawFlyer() {
       ctx.shadowOffsetY = 4;
     } else {
       ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     }
 
+    // Outline (white as requested)
     if (state.effectOutline) {
-      ctx.strokeStyle = "#000000";
-      ctx.lineWidth = fontSize * 0.10;
+      ctx.lineWidth = Math.max(2, Math.round(fontSize * 0.10));
+      ctx.strokeStyle = "#FFFFFF";
       ctx.strokeText(line, W / 2, y);
     }
 
@@ -268,9 +267,10 @@ async function drawFlyer() {
     ctx.fillText(line, W / 2, y);
   });
 
-  // QR box
+  // QR box (white box width controls the header matching width visually)
+  const qrPadding = qrSize * 0.10;
   const boxX = (W - (qrSize + qrPadding * 2)) / 2;
-  const boxY = topY + textBlockHeight + 35;
+  const boxY = contentTopY + textBlockHeight + 35;
   const qrTotalHeight = qrSize + qrPadding * 2 + 40;
 
   ctx.fillStyle = "#ffffff";
@@ -283,7 +283,6 @@ async function drawFlyer() {
   });
 
   const qrImg = await loadImage(qrDataURL);
-
   ctx.drawImage(qrImg, boxX + qrPadding, boxY + qrPadding, qrSize, qrSize);
 
   ctx.fillStyle = "#000000";
@@ -291,7 +290,7 @@ async function drawFlyer() {
   ctx.fillText("Scan to Enter", W / 2, boxY + qrSize + qrPadding + 10);
 }
 
-// Image loader
+/* ---------- Utilities ---------- */
 function loadImage(src) {
   return new Promise(resolve => {
     const img = new Image();
@@ -300,14 +299,11 @@ function loadImage(src) {
   });
 }
 
-// Load Sparklight logo
+/* ---------- Load Sparklight logo, then init ---------- */
 const logoImg = new Image();
-logoImg.onload = () => {
-  state.logo = logoImg;
-  drawFlyer();
-};
+logoImg.onload = () => { state.logo = logoImg; drawFlyer(); };
 logoImg.src = "sparklight-logo.png";
 
-// Init
+/* ---------- Kickoff ---------- */
 updateStateFromInputs();
 drawFlyer();

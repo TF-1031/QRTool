@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Magic 8 Reset Wrapper</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="magic8" 
+            src="https://www.magicmgmt.com/gary/magic8ball/index4KIMBERLY.html">
+    </iframe>
+
+    <script>
+        // Wait for iframe to load
+        document.getElementById("magic8").addEventListener("load", function() {
+
+            // Try to access the iframe
+            let frame = document.getElementById("magic8").contentWindow;
+
+            try {
+                // Simulate TWO clicks to "reset" + "run"
+                frame.document.body.click();
+                frame.document.body.click();
+            } catch(e) {
+                console.log("Cross-domain blocking prevents direct click, will use overlay clicker.");
+
+                // Backup method: overlay a transparent auto-clicker
+                let clicker = document.createElement("div");
+                clicker.style.position = "absolute";
+                clicker.style.top = "0";
+                clicker.style.left = "0";
+                clicker.style.width = "100%";
+                clicker.style.height = "100%";
+                clicker.style.zIndex = "99999";
+
+                document.body.appendChild(clicker);
+
+                // Fire two synthetic clicks
+                let evt = new MouseEvent("click", { bubbles: true, cancelable: true, view: window });
+                clicker.dispatchEvent(evt);
+                clicker.dispatchEvent(evt);
+
+                // Remove clicker
+                setTimeout(() => clicker.remove(), 500);
+            }
+        });
+    </script>
+
+</body>
+</html>

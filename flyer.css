@@ -15,29 +15,35 @@ body {
   text-align: center;
 }
 
-/* Header logo matches preview box width */
+/* ---------------------------------------
+   HEADER LOGO — MATCHES PREVIEW WIDTH
+-----------------------------------------*/
 #pageLogo {
   display: block;
   width: 100%;
   max-width: min(860px, 92vw);
-  margin: 0 auto 20px;
+  margin: 0 auto 25px;
   border-radius: 6px;
   background: #fff;
   box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
 
-/* Form box */
+/* ---------------------------------------
+   FORM CONTAINER
+-----------------------------------------*/
 form#flyerForm {
   background: #fff;
   max-width: 860px;
   margin: 0 auto 2rem;
   padding: 2rem 3rem;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   text-align: left;
 }
 
-/* Columns */
+/* ---------------------------------------
+   TWO COLUMNS
+-----------------------------------------*/
 .form-columns {
   display: flex;
   justify-content: center;
@@ -55,7 +61,9 @@ form#flyerForm {
   gap: 1rem;
 }
 
-/* Inputs */
+/* ---------------------------------------
+   INPUTS + TEXTAREAS + SELECTS
+-----------------------------------------*/
 input[type="text"],
 input[type="url"],
 textarea,
@@ -78,7 +86,28 @@ label {
   font-size: 15px;
 }
 
-/* Buttons */
+/* Inline row for Contest Details + White Text checkbox */
+.row-inline {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.row-inline textarea {
+  flex: 1;
+}
+
+.inline-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* ---------------------------------------
+   BUTTONS
+-----------------------------------------*/
 .buttons-row {
   display: flex;
   justify-content: center;
@@ -102,7 +131,9 @@ label {
   filter: brightness(0.92);
 }
 
-/* Preview box */
+/* ---------------------------------------
+   PREVIEW BOX
+-----------------------------------------*/
 #preview-stage {
   width: min(860px, 92vw);
   margin: 0 auto 2rem;

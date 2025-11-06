@@ -2,95 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Event Flyer Builder</title>
+
   <link rel="stylesheet" href="flyer.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script type="module" src="flyer.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
 
-<header id="headerBar">
-  <img id="pageLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder">
-</header>
+  <!-- ✅ Full-width header, centered, but max 900px -->
+  <header id="topHeader">
+    <img src="eventflyerbuilder-logo.png" id="headerImage" alt="Flyer Builder Header" />
+  </header>
 
-<form id="flyerForm">
+  <!-- ✅ Main centered container -->
+  <div id="mainContainer">
 
-  <div class="form-columns">
+    <!-- FORM -->
+    <form id="flyerForm">
 
-    <!-- LEFT -->
-    <div class="left-column">
-      <label>Event Name</label>
-      <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
+      <div class="form-columns">
 
-      <label>Contest Entry Details</label>
-      <div class="row-inline">
-        <textarea id="contestDetails" placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
-        <label class="inline-check">
-          <input type="checkbox" id="whiteTextToggle"> White Text
-        </label>
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+
+          <label>Event Name</label>
+          <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
+
+          <label>Contest Entry Details</label>
+          <textarea id="contestDetails" placeholder="Win a $100 Gift Card!
+Visit Booth 22."></textarea>
+
+          <label>Text Color</label>
+          <select id="textColorSelect">
+            <option value="#A600A5">Bright Purple</option>
+            <option value="#2323A4">Purple</option>
+            <option value="#0061D2">Blue</option>
+            <option value="#00D3E7">Bright Blue</option>
+            <option value="#FF0007">Red</option>
+            <option value="#00BC00">Green</option>
+            <option value="#4FD300">Bright Green</option>
+            <option value="#FFD800">Yellow</option>
+            <option value="#3F4142">Gray</option>
+            <option value="#051931">Dark Blue</option>
+            <option value="#FFFFFF">White</option>
+            <option value="#000000">Black</option>
+          </select>
+
+          <!-- ✅ Text Effects all on one line -->
+          <div class="effects-row">
+            <label><input type="checkbox" id="effectOutline"> Outline</label>
+            <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
+            <label><input type="checkbox" id="effectBox"> Background Box</label>
+          </div>
+
+          <label>Contest URL</label>
+          <input type="url" id="url" value="https://www.sparklight.com/internet" />
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-column">
+
+          <label>Download Format</label>
+          <select id="downloadFormat">
+            <option value="pdf">PDF</option>
+            <option value="jpg">JPG</option>
+          </select>
+
+          <label>Orientation</label>
+          <div class="orientation-toggle">
+            <label><input type="radio" name="orientation" value="portrait"> Portrait</label>
+            <label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
+          </div>
+
+          <label>Background Image</label>
+          <input type="file" id="imageUpload" accept="image/*" />
+
+          <div class="buttons-row">
+            <button type="button" id="saveBtn" class="btn">Download</button>
+            <button type="button" id="resetBtn" class="btn">Reset</button>
+          </div>
+
+        </div>
       </div>
+    </form>
 
-      <label>Text Color</label>
-      <select id="textColorSelect">
-        <option value="#A600A5">Bright Purple</option>
-        <option value="#2323A4">Purple</option>
-        <option value="#0061D2">Blue</option>
-        <option value="#00D3E7">Bright Blue</option>
-        <option value="#FF0007">Red</option>
-        <option value="#00BC00">Green</option>
-        <option value="#4FD300">Bright Green</option>
-        <option value="#FFD800">Yellow</option>
-        <option value="#3F4142">Gray</option>
-        <option value="#051931">Dark Blue</option>
-        <option value="#FFFFFF">White</option>
-        <option value="#000000">Black</option>
-      </select>
-
-      <label>Text Effects</label>
-      <div class="effects-group">
-        <label><input type="checkbox" id="effectOutline"> Outline</label>
-        <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
-        <label><input type="checkbox" id="effectBox"> Background Box</label>
-      </div>
-
-      <label>Contest URL</label>
-      <input type="url" id="url" value="https://www.sparklight.com/internet" />
-    </div>
-
-    <!-- RIGHT -->
-    <div class="right-column">
-
-      <label>Download Format</label>
-      <select id="downloadFormat">
-        <option value="pdf">PDF</option>
-        <option value="jpg">JPG</option>
-      </select>
-
-      <label>Orientation</label>
-      <div class="orientation-options">
-        <label><input type="radio" name="orientation" value="portrait"> Portrait</label>
-        <label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
-      </div>
-
-      <label>Background Image</label>
-      <input type="file" id="imageUpload" accept="image/*" />
-
-      <div class="buttons-row">
-        <button type="button" id="saveBtn" class="btn">Download</button>
-        <button type="button" id="resetBtn" class="btn">Reset</button>
-      </div>
-
+    <!-- ✅ Preview Output -->
+    <div id="preview-stage">
+      <canvas id="flyerCanvas"></canvas>
     </div>
 
   </div>
-
-</form>
-
-<div id="preview-stage">
-  <canvas id="flyerCanvas"></canvas>
-</div>
-
 </body>
 </html>

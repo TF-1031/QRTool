@@ -13,6 +13,11 @@ const state = {
   whiteText: false,
   image: null,
   logo: null,
+textColor: "#8d3b91",   // default stays brand purple
+effectOutline: false,
+effectShadow: false,
+effectBox: false,
+
 };
 
 const FONT_STACK = `"Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
@@ -298,5 +303,6 @@ logoImage.src = "sparklight-logo.png";
 
 updateState();
 drawFlyer();
+
 
 

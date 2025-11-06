@@ -4,29 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Flyer Builder</title>
+
   <link rel="stylesheet" href="flyer.css" />
   <script type="module" src="flyer.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
+
+  <!-- HEADER -->
   <header>
     <img src="eventflyerbuilderlogo.png" alt="Event Flyer Builder" id="pageLogo">
   </header>
 
+
+  <!-- FORM -->
   <form id="flyerForm">
+
     <div class="form-columns">
+
+      <!-- LEFT COLUMN -->
       <div class="left-column">
+
         <label>Event Name</label>
         <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
         <label>Contest Entry Details</label>
-        <textarea id="contestDetails" placeholder="Win a $100 Gift Card!\nVisit Booth 22."></textarea>
+
+        <!-- ✅ Inline row (textarea + checkbox) -->
+        <div class="row-inline">
+          <textarea id="contestDetails"
+            placeholder="Win a $100 Gift Card!\nVisit Booth 22."></textarea>
+
+          <!-- ✅ White text checkbox -->
+          <label class="inline-check">
+            <input type="checkbox" id="whiteTextToggle"> White Text
+          </label>
+        </div>
 
         <label>Contest URL</label>
         <input type="url" id="url" value="https://www.sparklight.com/internet" />
+
       </div>
 
+
+      <!-- RIGHT COLUMN -->
       <div class="right-column">
+
         <label>Download Format</label>
         <select id="downloadFormat">
           <option value="pdf">PDF</option>
@@ -46,12 +70,16 @@
           <button type="button" id="saveBtn" class="btn">Download</button>
           <button type="button" id="resetBtn" class="btn">Reset</button>
         </div>
+
       </div>
     </div>
   </form>
 
+
+  <!-- PREVIEW -->
   <div id="preview-stage">
     <canvas id="flyerCanvas"></canvas>
   </div>
+
 </body>
 </html>

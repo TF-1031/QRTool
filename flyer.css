@@ -1,98 +1,141 @@
-body {
-  margin: 0;
-  padding: 0;
-  background: #051931;
-  font-family: "Arial", sans-serif;
+:root{
+  --brand:#8d3b91;
+  --bg:#051931;
+  --card:#fff;
+  --border:#d9dbe3;
+  --radius:12px;
+  --maxw:900px;
+  --shadow:0 6px 18px rgba(0,0,0,.16);
 }
 
-.page-container {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 10px;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color:#1f1f23;
 }
 
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+.page-container{
+  max-width:var(--maxw);
+  margin:24px auto;
+  padding:0 16px 40px;
 }
 
-.header-bar img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:20px;
 }
 
-.form-columns {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
+.header-bar img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:8px;
+  margin-bottom:16px;
 }
 
-.left-column,
-.right-column {
-  flex: 1;
+.form-columns{
+  display:flex;
+  gap:32px;                 /* gutter between columns */
+  align-items:flex-start;
 }
 
-label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-  font-size: 14px;
+.col{
+  flex:1;
+}
+
+.left-column{
+  padding-right:18px;
+  border-right:1px solid var(--border);
+}
+.right-column{
+  padding-left:4px;
+}
+
+label{
+  display:block;
+  margin:10px 0 6px;
+  font-weight:700;
+  font-size:14px;
 }
 
 input[type="text"],
+input[type="url"],
+input[type="file"],
 select,
-textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+textarea{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:15px;
+  background:#fafafa;
 }
 
-textarea {
-  height: 120px;
-  resize: vertical;
+textarea{
+  min-height:110px;
+  resize:vertical;
 }
 
-.effects-inline {
-  margin-top: 8px;
+.effects-inline{
+  display:flex;
+  gap:24px;
+  align-items:center;
+  margin-top:6px;
 }
 
-.effects-inline label {
-  margin-right: 18px;
-  font-weight: normal;
+.orientation-group{
+  display:flex;
+  gap:22px;
+  margin-top:8px;
 }
 
-.orientation-group label {
-  margin-right: 18px;
+.button-row{
+  display:flex;
+  gap:12px;
+  margin-top:14px;
+  flex-wrap:wrap;
 }
 
-.button-row {
-  margin-top: 20px;
+.btn{
+  background:var(--brand);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:10px 18px;
+  font-weight:700;
+  cursor:pointer;
+}
+.btn-gray{ background:#7a7f89; }
+
+.preview-wrap{
+  /* keep just the flyer visible; no white card */
+  display:flex;
+  justify-content:center;
+  padding:10px 0 0;
 }
 
-button {
-  background: #8D3BAF;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: none;
-  margin-right: 10px;
-  cursor: pointer;
+#flyerCanvas{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:var(--maxw);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;
+  background:#ffffff; /* canvas background */
 }
 
-.preview-card {
-  text-align: center;
-  padding: 20px;
-}
-
-#flyerCanvas {
-  max-width: 100%;
-  height: auto;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+/* Mobile responsiveness */
+@media (max-width: 760px){
+  .form-columns{flex-direction:column; gap:18px;}
+  .left-column{
+    border-right:none; padding-right:0; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:8px;
+  }
+  .right-column{padding-left:0;}
+  .button-row{justify-content:flex-start}
 }

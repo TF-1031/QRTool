@@ -1,180 +1,73 @@
-// ================================
-// CANVAS + CTX
-// ================================
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
 
-const headerLogo = document.getElementById("headerLogo");
-
-// Mobile label
+// Mobile camera input label
 const bgLabel = document.getElementById("bgLabel");
 if (/Mobi|Android/i.test(navigator.userAgent)) {
   bgLabel.textContent = "Background Image (Choose File or Take Photo)";
 }
 
-// ================================
-// MLA TITLE CASE (protect acronyms)
-// ================================
-function toMLATitleCase(text) {
-  const alwaysCap = ["TV", "USA", "UK", "HD", "4K"];
-  return text
-    .split(" ")
-    .map(w => {
-      if (alwaysCap.includes(w.toUpperCase())) return w.toUpperCase();
-      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-    })
-    .join(" ");
-}
-
-// ================================
-// FILENAME BUILDER
-// ================================
+// Filename builder
 function makeFilename(eventName) {
   const now = new Date();
-  const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-  const mon = months[now.getMonth()];
+  const mon = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][now.getMonth()];
   const yr = now.getFullYear().toString().slice(-2);
-  return `${eventName.replace(/\s+/g,"_")}_${mon}${yr}`;
+  return `${eventName.replace(/\s+/g,"_") || "Flyer"}_${mon}${yr}`;
 }
 
-// ================================
-// TEXT WRAP
-// ================================
-function wrapTextBlock(text, fontSize, maxWidth) {
-  ctx.font = `bold ${fontSize}px Arial`;
-  const words = text.split(" ");
-  const lines = [];
-  let line = "";
-
-  for (let w of words) {
-    const test = line + w + " ";
-    if (ctx.measureText(test).width > maxWidth) {
-      lines.push(line.trim());
-      line = w + " ";
-    } else {
-      line = test;
-    }
-  }
-  lines.push(line.trim());
-  return lines;
-}
-
-// ================================
-// MAIN DRAW FUNCTION
-// ================================
+// Draw function
 async function drawFlyer() {
-
-  // Swap header to DONE version once editing
-  headerLogo.src = "eventflyerbuilder-done.png";
-
   const orient = document.querySelector("input[name='orient']:checked").value;
 
-  // Landscape = 1100x850  | Portrait = 850x1100
   const W = orient === "portrait" ? 850 : 1100;
   const H = orient === "portrait" ? 1100 : 850;
 
   canvas.width = W;
   canvas.height = H;
 
-  // Fill white
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, W, H);
-
-  // ----------------------------
-  // READ FORM VALUES
-  // ----------------------------
-  const contestDetails = document.getElementById("contestDetails").value.trim();
+  // ==== Pull fields ====
+  const details = document.getElementById("contestDetails").value.trim();
   const url = document.getElementById("contestURL").value.trim();
   const textColor = document.getElementById("textColorSelect").value;
   const outline = document.getElementById("effectOutline").checked;
   const shadow = document.getElementById("effectShadow").checked;
+  const fileInput = document.getElementById("imageUpload").files[0];
 
-  // ----------------------------
-  // BACKGROUND IMAGE
-  // ----------------------------
-  const fileInput = document.getElementById("imageUpload");
-  let bgImage = null;
+  // ==== Background fill ====
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
 
-  if (fileInput.files && fileInput.files[0]) {
-    bgImage = new Image();
-    bgImage.src = URL.createObjectURL(fileInput.files[0]);
+  // ==== Draw uploaded background ====
+  if (fileInput) {
+    const img = new Image();
+    img.src = URL.createObjectURL(fileInput);
+    await img.decode();
 
-    await new Promise(res => (bgImage.onload = res));
+    ctx.drawImage(img, 0, 0, W, H);
 
-    const imgRatio = bgImage.width / bgImage.height;
-    const canvasRatio = W / H;
-    let bw, bh, bx, by;
+    // Gradient wash — TOP white → transparent
+    const grad = ctx.createLinearGradient(0, 0, 0, H * 0.45);
+    grad.addColorStop(0, "rgba(255,255,255,0.75)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
 
-    if (imgRatio > canvasRatio) {
-      bh = H;
-      bw = bh * imgRatio;
-      bx = (W - bw) / 2;
-      by = 0;
-    } else {
-      bw = W;
-      bh = bw / imgRatio;
-      bx = 0;
-      by = (H - bh) / 2;
-    }
-
-    ctx.drawImage(bgImage, bx, by, bw, bh);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H * 0.45);
   }
 
-  // ----------------------------
-  // GRADIENT WASH (draw BEFORE text)
-  // ----------------------------
-  const washHeight = Math.min(0.45 * H, 360);
-  const grad = ctx.createLinearGradient(0, 0, 0, washHeight);
-  grad.addColorStop(0, "rgba(255,255,255,0.92)");
-  grad.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, washHeight);
-
-  // ----------------------------
-  // SPARKLIGHT LOGO (PNG)
-  // ----------------------------
+  // ==== Sparklight Logo ====
   const logo = new Image();
   logo.src = "sparklight-logo.png";
-  await new Promise(res => (logo.onload = res));
+  await logo.decode();
 
-  const logoWidth = 300;
-  const logoHeight = 70;
-  const logoX = W / 2 - logoWidth / 2;
-  const logoY = washHeight - logoHeight - 10;
+  const LOGO_W = 350;
+  const LOGO_H = (logo.height / logo.width) * LOGO_W;
 
-  ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+  ctx.drawImage(logo, W/2 - LOGO_W/2, 80, LOGO_W, LOGO_H);
 
-  const logoBottom = logoY + logoHeight;
+  const logoBottom = 80 + LOGO_H;
 
-  // ----------------------------
-  // HEADLINE (Contest Entry Details)
-  // ----------------------------
-  let fontSize = 64;
-  let maxWidth = W * 0.8;
-  let lines = wrapTextBlock(contestDetails, fontSize, maxWidth);
-
-  // Shrink until no more than 2 lines
-  while (lines.length > 2 && fontSize > 22) {
-    fontSize -= 2;
-    lines = wrapTextBlock(contestDetails, fontSize, maxWidth);
-  }
-
-  const lineGap = fontSize * 0.25;
-  const blockH = lines.length * (fontSize + lineGap);
-
-  // ----------------------------
-  // Position headline BELOW logo
-  // ----------------------------
-  let headlineTop = logoBottom + 28;
-
-  const idealQrZoneTop = Math.max(H * 0.48, headlineTop + blockH + 120);
-  const available = idealQrZoneTop - headlineTop - blockH - 40;
-
-  if (available > 0) headlineTop += Math.min(available * 0.45, 60);
-
-  // Text effects
+  // ==== Contest Entry Details ====
   ctx.textAlign = "center";
-  ctx.font = `bold ${fontSize}px Arial`;
   ctx.fillStyle = textColor;
 
   if (shadow) {
@@ -186,63 +79,90 @@ async function drawFlyer() {
     ctx.shadowColor = "transparent";
   }
 
+  let fontSize = 56;
+  ctx.font = `bold ${fontSize}px Arial`;
+
+  let lines = wrap(details, W * 0.75);
+
+  while (lines.length > 2 && fontSize > 26) {
+    fontSize -= 2;
+    ctx.font = `bold ${fontSize}px Arial`;
+    lines = wrap(details, W * 0.75);
+  }
+
+  const textStart = logoBottom + 40;
+
   if (outline) {
     ctx.lineWidth = 6;
     ctx.strokeStyle = "white";
+    lines.forEach((line, i) =>
+      ctx.strokeText(line, W/2, textStart + i * (fontSize + 12))
+    );
   }
 
-  // Draw headline
-  lines.forEach((line, i) => {
-    const y = headlineTop + i * (fontSize + lineGap);
-    if (outline) ctx.strokeText(line, W / 2, y);
-    ctx.fillText(line, W / 2, y);
-  });
+  lines.forEach((line, i) =>
+    ctx.fillText(line, W/2, textStart + i * (fontSize + 12))
+  );
 
-  // ----------------------------
-  // QR CODE
-  // ----------------------------
-  const qrData = await QRCode.toDataURL(url);
+  const textBottom = textStart + lines.length * (fontSize + 12);
+
+  // ==== QR CODE ====
+  const QR = await QRCode.toDataURL(url);
   const qrImg = new Image();
-  qrImg.src = qrData;
-  await new Promise(res => (qrImg.onload = res));
+  qrImg.src = QR;
+  await qrImg.decode();
 
-  const qrSize = 300;
-  const qrTop = Math.max(idealQrZoneTop, headlineTop + blockH + 40);
+  const QR_SIZE = 280;
+  const qrY = textBottom + 40;
 
-  ctx.drawImage(qrImg, W / 2 - qrSize / 2, qrTop, qrSize, qrSize);
+  ctx.drawImage(qrImg, W/2 - QR_SIZE/2, qrY, QR_SIZE, QR_SIZE);
 
-  // "SCAN TO ENTER"
+  // ==== Scan To Enter ====
   ctx.shadowColor = "transparent";
   ctx.fillStyle = textColor;
   ctx.font = "bold 26px Arial";
-  ctx.fillText("Scan to Enter", W / 2, qrTop + qrSize + 40);
+  ctx.fillText("Scan to Enter", W/2, qrY + QR_SIZE + 40);
 }
 
-// ================================
-// EVENT LISTENERS
-// ================================
-document
-  .querySelectorAll("#flyerForm input, #flyerForm select, #flyerForm textarea")
+// Wrap helper
+function wrap(text, maxWidth) {
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+
+  words.forEach(word => {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > maxWidth) {
+      lines.push(line.trim());
+      line = word + " ";
+    } else {
+      line = test;
+    }
+  });
+
+  if (line.trim()) lines.push(line.trim());
+  return lines;
+}
+
+// Form listeners
+document.querySelectorAll("#flyerForm input, #flyerForm select, #flyerForm textarea")
   .forEach(el => el.addEventListener("input", drawFlyer));
 
 document.getElementById("resetBtn").addEventListener("click", () => {
-  headerLogo.src = "eventflyerbuilder-logo.png";
   document.getElementById("flyerForm").reset();
-  drawFlyer();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
 document.getElementById("downloadBtn").addEventListener("click", async () => {
   await drawFlyer();
-
   const fmt = document.getElementById("downloadFormat").value;
-  const eventName = document.getElementById("eventName").value || "Flyer";
-  const filename = makeFilename(eventName);
+  const filename = makeFilename(document.getElementById("eventName").value);
 
   if (fmt === "png") {
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = `${filename}.png`;
-    a.click();
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `${filename}.png`;
+    link.click();
   } else {
     const pdf = new jspdf.jsPDF("l", "pt", [canvas.width, canvas.height]);
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0);
@@ -250,5 +170,5 @@ document.getElementById("downloadBtn").addEventListener("click", async () => {
   }
 });
 
-// Initial render
+// Initial draw
 drawFlyer();

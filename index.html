@@ -23,26 +23,51 @@
 
     <div class="form-columns">
 
-      <!-- LEFT COLUMN -->
-      <div class="left-column">
+<!-- LEFT COLUMN -->
+<div class="left-column">
 
-        <label>Event Name</label>
-        <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
+  <label>Event Name</label>
+  <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
-        <label>Contest Entry Details</label>
+  <!-- Contest Entry Details -->
+  <label>Contest Entry Details</label>
 
-        <!-- ✅ Inline row (textarea + checkbox) -->
-        <div class="row-inline">
-          <textarea id="contestDetails"
-            placeholder="Win a $100 Gift Card!\nVisit Booth 22."></textarea>
+  <!-- ✅ Inline textarea + white text toggle -->
+  <div class="row-inline">
+    <textarea id="contestDetails"
+      placeholder="Win a $100 Gift Card!\nVisit Booth 22."></textarea>
 
-          <!-- ✅ White text checkbox -->
-          <label class="inline-check">
-            <input type="checkbox" id="whiteTextToggle"> White Text
-          </label>
-        </div>
+    <label class="inline-check">
+      <input type="checkbox" id="whiteTextToggle"> White Text
+    </label>
+  </div>
 
-        <label>Contest URL</label>
+  <!-- ✅ Text Color Selector -->
+  <label>Text Color</label>
+  <select id="textColorSelect">
+    <option value="#A600A5">Bright Purple</option>
+    <option value="#2323A4">Purple</option>
+    <option value="#0061D2">Blue</option>
+    <option value="#00D3E7">Bright Blue</option>
+    <option value="#FF0007">Red</option>
+    <option value="#00BC00">Green</option>
+    <option value="#4FD300">Bright Green</option>
+    <option value="#FFD800">Yellow</option>
+    <option value="#3F4142">Gray</option>
+    <option value="#051931">Dark Blue</option>
+    <option value="#FFFFFF">White</option>
+    <option value="#000000">Black</option>
+  </select>
+
+  <!-- ✅ Effect Toggles -->
+  <label>Text Effects</label>
+  <div class="effects-group">
+    <label><input type="checkbox" id="effectOutline"> Outline</label>
+    <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
+    <label><input type="checkbox" id="effectBox"> Background Box</label>
+  </div>
+
+   <label>Contest URL</label>
         <input type="url" id="url" value="https://www.sparklight.com/internet" />
 
       </div>
@@ -83,3 +108,4 @@
 
 </body>
 </html>
+

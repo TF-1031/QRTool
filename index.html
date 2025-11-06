@@ -6,10 +6,11 @@
   <title>Event Flyer Builder</title>
   <link rel="stylesheet" href="flyer.css" />
 </head>
+
 <body>
   <div class="page-container">
 
-    <!-- Form (white card) -->
+    <!-- FORM CARD -->
     <div class="card form-card">
       <div class="header-bar">
         <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
@@ -17,8 +18,10 @@
 
       <form id="flyerForm" autocomplete="off">
         <div class="form-columns">
-          <!-- LEFT -->
+
+          <!-- LEFT COLUMN -->
           <div class="col left-column">
+
             <label for="eventName">Event Name</label>
             <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
 
@@ -48,10 +51,12 @@
 
             <label for="contestURL">Contest URL</label>
             <input type="url" id="contestURL" value="https://www.sparklight.com/internet" />
+
           </div>
 
-          <!-- RIGHT -->
+          <!-- RIGHT COLUMN -->
           <div class="col right-column">
+
             <label for="downloadFormat">Download Format</label>
             <select id="downloadFormat">
               <option value="pdf">PDF</option>
@@ -70,23 +75,26 @@
               <button type="button" id="downloadBtn" class="btn">Download</button>
               <button type="button" id="resetBtn" class="btn btn-gray">Reset</button>
             </div>
+
           </div>
+
         </div>
       </form>
     </div>
 
-    <!-- Preview (no white card—just the flyer) -->
+    <!-- PREVIEW (NO CARD WRAPPER) -->
     <div class="preview-wrap">
       <canvas id="flyerCanvas"></canvas>
     </div>
 
   </div>
 
-  <!-- libs -->
+  <!-- LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- main -->
+  <!-- MAIN SCRIPT -->
   <script src="flyer.js"></script>
+
 </body>
 </html>

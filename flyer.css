@@ -10,6 +10,7 @@
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
 body{
   margin:0;
   background:var(--bg);
@@ -51,9 +52,8 @@ body{
   padding-right:18px;
   border-right:1px solid var(--border);
 }
-.right-column{
-  padding-left:4px;
-}
+
+.right-column{ padding-left:5px; }
 
 label{
   display:block;
@@ -122,17 +122,22 @@ textarea{
   width:100%;
   height:auto;
   max-width:var(--maxw);
-  border:1px solid rgba(255,255,255,.15);
   border-radius:10px;
   background:#ffffff;
+  border:1px solid rgba(255,255,255,0.15);
 }
 
-/* Mobile responsiveness */
-@media (max-width: 760px){
-  .form-columns{flex-direction:column; gap:18px;}
-  .left-column{
-    border-right:none; padding-right:0; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:8px;
+/* MOBILE */
+@media (max-width:760px){
+  .form-columns{
+    flex-direction:column;
+    gap:20px;
   }
-  .right-column{padding-left:0;}
-  .button-row{justify-content:flex-start}
+  .left-column{
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding-right:0;
+    padding-bottom:16px;
+  }
+  .right-column{ padding-left:0; }
 }

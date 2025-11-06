@@ -207,7 +207,7 @@ async function drawFlyer() {
     40
   ) / 2;
 
-onst textX = W / 2;
+const textX = W / 2;
 
 // TEXT BACKGROUND BOX
 if (state.effectBox) {
@@ -298,4 +298,5 @@ logoImage.src = "sparklight-logo.png";
 
 updateState();
 drawFlyer();
+
 

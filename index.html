@@ -2,33 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Flyer Builder</title>
   <link rel="stylesheet" href="flyer.css" />
+  <!-- jsPDF (for PDF export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <!-- QRCode (browser bundle) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+  <script src="flyer.js" defer></script>
 </head>
-
 <body>
-  <div class="page-container">
+  <div class="page">
     <div class="card form-card">
-
+      <!-- Header INSIDE the card and full width -->
       <div class="header-bar">
-        <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder">
+        <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
       </div>
 
-      <form id="flyerForm">
+      <form id="flyerForm" class="form">
+        <div class="cols">
+          <!-- Left -->
+          <div class="col">
+            <label for="eventName">Event Name</label>
+            <input id="eventName" type="text" placeholder="e.g. Summer Bash" />
 
-        <div class="form-columns">
+            <label for="contestDetails">Contest Entry Details</label>
+            <textarea id="contestDetails" placeholder="Win a $100 Gift Card!
+Visit Booth 22."></textarea>
 
-          <!-- LEFT -->
-          <div class="left-column">
-            <label>Event Name</label>
-            <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
-
-            <label>Contest Entry Details</label>
-            <textarea id="contestDetails"
-              placeholder="Win a $100 Gift Card!&#10;Visit Booth 22."></textarea>
-
-            <label>Text Color</label>
+            <label for="textColorSelect">Text Color</label>
             <select id="textColorSelect">
               <option value="#A600A5">Bright Purple</option>
               <option value="#2323A4">Purple</option>
@@ -44,47 +46,43 @@
               <option value="#000000">Black</option>
             </select>
 
-            <div class="effects-inline">
-              <label><input type="checkbox" id="effectOutline"> Outline</label>
-              <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
+            <div class="effects">
+              <label><input type="checkbox" id="effectOutline" /> Outline</label>
+              <label><input type="checkbox" id="effectShadow" /> Drop Shadow</label>
             </div>
 
-            <label>Contest URL</label>
-            <input type="text" id="contestURL" value="https://www.sparklight.com/internet">
+            <label for="contestURL">Contest URL</label>
+            <input id="contestURL" type="text" value="https://www.sparklight.com/internet" />
           </div>
 
-          <!-- RIGHT -->
-          <div class="right-column">
-            <label>Download Format</label>
+          <!-- Right -->
+          <div class="col">
+            <label for="downloadFormat">Download Format</label>
             <select id="downloadFormat">
               <option value="pdf">PDF</option>
               <option value="png">PNG</option>
             </select>
 
-            <div class="orientation-group">
-              <label><input type="radio" name="orient" value="portrait"> Portrait</label>
-              <label><input type="radio" name="orient" value="landscape" checked> Landscape</label>
+            <div class="orient">
+              <label><input type="radio" name="orient" value="portrait" /> Portrait</label>
+              <label><input type="radio" name="orient" value="landscape" checked /> Landscape</label>
             </div>
 
-            <label id="bgLabel">Background Image</label>
-            <input type="file" id="imageUpload" accept="image/*" capture="environment">
+            <label id="bgLabel" for="imageUpload">Background Image</label>
+            <input id="imageUpload" type="file" accept="image/*" capture="environment" />
 
-            <div class="button-row">
-              <button type="button" id="downloadBtn">Download</button>
-              <button type="button" id="resetBtn">Reset</button>
+            <div class="buttons">
+              <button type="button" id="downloadBtn" class="btn">Download</button>
+              <button type="button" id="resetBtn" class="btn btn-ghost">Reset</button>
             </div>
           </div>
-
         </div>
       </form>
     </div>
 
-    <!-- PREVIEW -->
     <div class="card preview-card">
       <canvas id="flyerCanvas"></canvas>
     </div>
   </div>
-
-  <script src="flyer.js"></script>
 </body>
 </html>

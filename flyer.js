@@ -1,54 +1,44 @@
 const canvas = document.getElementById("flyerCanvas");
 const ctx = canvas.getContext("2d");
-
 const headerLogo = document.getElementById("headerLogo");
 
-// MOBILE: change background image label
+// Mobile: change label
 const bgLabel = document.getElementById("bgLabel");
 if (/Mobi|Android/i.test(navigator.userAgent)) {
   bgLabel.textContent = "Background Image (Choose a File or Take a Photo)";
 }
 
-// ---------------------------
-// MLA-style Title Case WITH acronym protection
-// ---------------------------
+/* MLA Title Case with acronym protection */
 function toMLATitleCase(text) {
   const alwaysCap = ["TV", "USA", "UK", "HD", "4K"];
-  return text
-    .split(" ")
-    .map(word => {
-      if (alwaysCap.includes(word.toUpperCase())) return word.toUpperCase();
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(" ");
+  return text.split(" ").map(word => {
+    if (alwaysCap.includes(word.toUpperCase())) return word.toUpperCase();
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(" ");
 }
 
-// ---------------------------
-// Filename generator
-// ---------------------------
+/* Filename generator */
 function makeFilename(eventName) {
   const now = new Date();
-  const monthNames = [
-    "JAN","FEB","MAR","APR","MAY","JUN",
-    "JUL","AUG","SEP","OCT","NOV","DEC"
-  ];
-
-  const mon = monthNames[now.getMonth()];
+  const mon = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][now.getMonth()];
   const yr = now.getFullYear().toString().slice(-2);
-
   return `${eventName.replace(/\s+/g, "_")}_${mon}${yr}`;
 }
 
-// ---------------------------
-// Draw Flyer
-// ---------------------------
+/* Draw Flyer */
 async function drawFlyer() {
 
-  // Header swap when user edits
   headerLogo.src = "eventflyerbuilder-done.png";
 
-  const W = 1100;
-  const H = 850;
+  let W = 1100;
+  let H = 850;
+
+  const orient = document.querySelector("input[name='orient']:checked").value;
+  if (orient === "portrait") {
+    W = 850;
+    H = 1100;
+  }
+
   canvas.width = W;
   canvas.height = H;
 
@@ -63,52 +53,40 @@ async function drawFlyer() {
   const outline = document.getElementById("effectOutline").checked;
   const shadow = document.getElementById("effectShadow").checked;
 
-  // ORIENTATION
-  const orient = document.querySelector("input[name='orient']:checked").value;
-
-  // Draw header logo in preview
+  // Draw Sparklight Logo
   const brandLogo = new Image();
   brandLogo.src = "sparklight-logo.png";
-
   await brandLogo.decode();
   ctx.drawImage(brandLogo, W/2 - 150, 40, 300, 80);
 
-  // TEXT EFFECTS
-  ctx.fillStyle = textColor;
+  // Main title
   ctx.textAlign = "center";
   ctx.font = "bold 48px Arial";
+  ctx.fillStyle = textColor;
 
-  if (shadow) {
-    ctx.shadowColor = "rgba(0,0,0,0.4)";
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
-  } else {
-    ctx.shadowColor = "transparent";
-  }
+  ctx.shadowColor = shadow ? "rgba(0,0,0,0.4)" : "transparent";
+  ctx.shadowBlur = shadow ? 6 : 0;
+  ctx.shadowOffsetX = shadow ? 3 : 0;
+  ctx.shadowOffsetY = shadow ? 3 : 0;
 
   if (outline) {
     ctx.lineWidth = 6;
-    ctx.strokeStyle = "white"; 
+    ctx.strokeStyle = "white";
   }
 
-  // Event Name in Title Case
   const titleText = toMLATitleCase(eventName);
   if (outline) ctx.strokeText(titleText, W/2, 180);
   ctx.fillText(titleText, W/2, 180);
 
-  // Contest Details (wrapped, 2-line shrink)
+  // Contest Details (2 lines max)
   let fontSize = 42;
-  ctx.font = `bold ${fontSize}px Arial`;
-
-  const maxWidth = 800;
   let lines = wrapText(contestDetails, fontSize);
-
-  while (lines.length > 2 && fontSize > 22) {
+  while (lines.length > 2 && fontSize > 20) {
     fontSize -= 2;
-    ctx.font = `bold ${fontSize}px Arial`;
     lines = wrapText(contestDetails, fontSize);
   }
+
+  ctx.font = `bold ${fontSize}px Arial`;
 
   lines.forEach((line, i) => {
     const yPos = 260 + i * (fontSize + 10);
@@ -116,23 +94,20 @@ async function drawFlyer() {
     ctx.fillText(line, W/2, yPos);
   });
 
-  // QR Code Section
-  ctx.font = "bold 24px Arial";
-  ctx.shadowColor = "transparent";
-
+  // QR Code
   const QR = await QRCode.toDataURL(url);
   const qrImg = new Image();
   qrImg.src = QR;
   await qrImg.decode();
-  ctx.drawImage(qrImg, W/2 - 150, 350, 300, 300);
 
+  ctx.drawImage(qrImg, W/2 - 150, 350, 300, 300);
+  ctx.shadowColor = "transparent";
+  ctx.font = "bold 24px Arial";
   ctx.fillStyle = "black";
   ctx.fillText("Scan to Enter", W/2, 690);
 }
 
-// ---------------------------
-// Word wrap helper
-// ---------------------------
+/* Wrap text */
 function wrapText(text, size) {
   ctx.font = `bold ${size}px Arial`;
   const words = text.split(" ");
@@ -153,16 +128,14 @@ function wrapText(text, size) {
   return lines;
 }
 
-// ---------------------------
-// Event listeners
-// ---------------------------
+/* Listeners */
 document.querySelectorAll("#flyerForm input, #flyerForm select, #flyerForm textarea")
   .forEach(el => el.addEventListener("input", drawFlyer));
 
 document.getElementById("resetBtn").addEventListener("click", () => {
   headerLogo.src = "eventflyerbuilder-logo.png";
   document.getElementById("flyerForm").reset();
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawFlyer();
 });
 
 document.getElementById("downloadBtn").addEventListener("click", async () => {
@@ -172,9 +145,8 @@ document.getElementById("downloadBtn").addEventListener("click", async () => {
   const name = makeFilename(document.getElementById("eventName").value || "Flyer");
 
   if (fmt === "png") {
-    const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
-    a.href = url;
+    a.href = canvas.toDataURL("image/png");
     a.download = `${name}.png`;
     a.click();
   } else {

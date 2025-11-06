@@ -14,6 +14,18 @@ body {
   color: #1f1f23;
   text-align: center;
 }
+.effects-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.effects-group label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
 
 /* HEADER (same width as preview box) */
 #pageLogo {
@@ -135,3 +147,4 @@ label {
   height: auto;
   display: block;
 }
+

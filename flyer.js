@@ -120,4 +120,11 @@ img.onload = () => { state.bgImg = img; render(); markDirty(); };
 img.onerror = () => { state.bgImg = null; render(); markDirty(); };
 img.src = URL.createObjectURL(file);
 });
+
+
+// Reset
+form.addEventListener('reset', (e) => {
+setTimeout(() => {
+// Defaults
+state.orientation = 'landscape';
 })();

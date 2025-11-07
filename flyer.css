@@ -1,78 +1,62 @@
+:root {
 body {
-  background: #051931;
-  margin: 0;
-  font-family: Arial, sans-serif;
+margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+background: var(--bg); color: var(--ink);
 }
 
-.page-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
+
+.app { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+
+
+.hero {
+background: #121826; border-radius: var(--radius); box-shadow: var(--shadow);
+overflow: hidden; margin-bottom: 16px; border: 1px solid #1f2937;
 }
+.hero img { width: 100%; display: block; }
+
 
 .card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 30px;
+background: #0b1220; border-radius: var(--radius); box-shadow: var(--shadow);
+border: 1px solid #1f2937; padding: 16px;
 }
 
-.form-card {
-  padding: 0 0 20px 0;
+
+.layout {
+display: grid; gap: var(--gutter);
+grid-template-columns: 1fr 1fr; align-items: start;
 }
 
-.header-bar img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  border-radius: 8px 8px 0 0;
+
+.controls { display: grid; gap: var(--gutter); grid-template-columns: 1fr 1fr; }
+.controls .col-span { grid-column: 1 / -1; }
+
+
+.field label, .field legend { font-size: 0.9rem; color: var(--muted); display: block; margin-bottom: 6px; }
+.field input[type="text"], .field input[type="url"], .field input[type="file"],
+.field select, .field textarea {
+width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #243042;
+background: #0b1424; color: var(--ink); outline: none;
 }
 
-.form-columns {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 20px;
-  gap: 40px;
-}
 
-.left-column, .right-column {
-  flex: 1;
-  min-width: 260px;
-}
+.radios label, .checks label { margin-right: 14px; }
 
-textarea {
-  width: 100%;
-  height: 110px;
-  resize: vertical;
-}
 
-.effects-inline {
-  margin: 10px 0;
+.actions { display: flex; gap: 12px; }
+.btn {
+appearance: none; border: 1px solid #334155; background: #111827; color: var(--ink);
+border-radius: 999px; padding: 10px 16px; cursor: pointer;
 }
+.btn.primary { background: var(--accent); border-color: #5c2462; }
+.btn:focus-visible { outline: 3px solid rgba(141,59,145,.5); outline-offset: 2px; }
 
-.orientation-group label {
-  margin-right: 10px;
-}
 
-.button-row {
-  margin-top: 15px;
-}
+.preview { background: #0a1222; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; }
+#flyerCanvas { width: 100%; height: auto; display: block; background: white; border-radius: 8px; }
+.note { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
 
-.preview-card {
-  text-align: center;
-  padding: 20px;
-}
 
-#flyerCanvas {
-  max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  background: white;
-}
-
-/* MOBILE FIXES */
-@media (max-width: 700px) {
-  .form-columns {
-    flex-direction: column;
-  }
+@media (max-width: 1000px) {
+.layout { grid-template-columns: 1fr; }
+.controls { grid-template-columns: 1fr; }
 }

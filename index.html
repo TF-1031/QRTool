@@ -1,88 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Event Flyer Builder</title>
-  <link rel="stylesheet" href="flyer.css" />
-  <!-- jsPDF (for PDF export) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-  <!-- QRCode (browser bundle) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
-  <script src="flyer.js" defer></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Event Flyer Builder</title>
+<link rel="preload" href="sparklight-logo.png" as="image">
+<link rel="preload" href="eventflyerbuilder-logo.png" as="image">
+<link rel="preload" href="eventflyerbuilder-done.png" as="image">
+<link rel="stylesheet" href="flyer.css" />
 </head>
 <body>
-  <div class="page">
-    <div class="card form-card">
-      <!-- Header INSIDE the card and full width -->
-      <div class="header-bar">
-        <img id="headerLogo" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
-      </div>
+<main class="app">
+<header class="hero">
+<img id="headerBanner" src="eventflyerbuilder-logo.png" alt="Event Flyer Builder" />
+</header>
 
-      <form id="flyerForm" class="form">
-        <div class="cols">
-          <!-- Left -->
-          <div class="col">
-            <label for="eventName">Event Name</label>
-            <input id="eventName" type="text" placeholder="e.g. Summer Bash" />
 
-            <label for="contestDetails">Contest Entry Details</label>
-            <textarea id="contestDetails" placeholder="Win a $100 Gift Card!
-Visit Booth 22."></textarea>
+<section class="card layout">
+<form id="flyerForm" class="controls" autocomplete="off">
+<div class="field">
+<label for="eventName">Event Name</label>
+<input id="eventName" type="text" placeholder="e.g. Summer Bash" />
+</div>
 
-            <label for="textColorSelect">Text Color</label>
-            <select id="textColorSelect">
-              <option value="#A600A5">Bright Purple</option>
-              <option value="#2323A4">Purple</option>
-              <option value="#0061D2">Blue</option>
-              <option value="#00D3E7">Bright Blue</option>
-              <option value="#FF0007">Red</option>
-              <option value="#00BC00">Green</option>
-              <option value="#4FD300">Bright Green</option>
-              <option value="#FFD800">Yellow</option>
-              <option value="#3F4142">Gray</option>
-              <option value="#051931">Dark Blue</option>
-              <option value="#FFFFFF">White</option>
-              <option value="#000000">Black</option>
-            </select>
 
-            <div class="effects">
-              <label><input type="checkbox" id="effectOutline" /> Outline</label>
-              <label><input type="checkbox" id="effectShadow" /> Drop Shadow</label>
-            </div>
+<div class="field">
+<label for="format">Download Format</label>
+<select id="format">
+<option value="pdf" selected>PDF</option>
+<option value="png">PNG</option>
+</select>
+</div>
 
-            <label for="contestURL">Contest URL</label>
-            <input id="contestURL" type="text" value="https://www.sparklight.com/internet" />
-          </div>
 
-          <!-- Right -->
-          <div class="col">
-            <label for="downloadFormat">Download Format</label>
-            <select id="downloadFormat">
-              <option value="pdf">PDF</option>
-              <option value="png">PNG</option>
-            </select>
+<div class="field col-span">
+<label for="details">Contest Entry Details</label>
+<textarea id="details" rows="4" placeholder="Enter headline or contest details..."></textarea>
+</div>
 
-            <div class="orient">
-              <label><input type="radio" name="orient" value="portrait" /> Portrait</label>
-              <label><input type="radio" name="orient" value="landscape" checked /> Landscape</label>
-            </div>
 
-            <label id="bgLabel" for="imageUpload">Background Image</label>
-            <input id="imageUpload" type="file" accept="image/*" capture="environment" />
+<fieldset class="field radios">
+<legend>Orientation</legend>
+<label><input type="radio" name="orientation" value="portrait"> Portrait</label>
+<label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
+</fieldset>
 
-            <div class="buttons">
-              <button type="button" id="downloadBtn" class="btn">Download</button>
-              <button type="button" id="resetBtn" class="btn btn-ghost">Reset</button>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
 
-    <div class="card preview-card">
-      <canvas id="flyerCanvas"></canvas>
-    </div>
-  </div>
+<div class="field">
+<label for="bgFile" id="bgLabel">Background Image</label>
+<input id="bgFile" type="file" accept="image/*" capture="environment" />
+</div>
+
+
+<div class="field">
+<label for="textColor">Text Color</label>
+<select id="textColor">
+<option value="#6E2F90">Bright Purple</option>
+<option value="#4B4F54">Charcoal</option>
+<option value="#1F6FEB">Blue</option>
+<option value="#000000">Black</option>
+<option value="#FFFFFF">White</option>
+</select>
+</div>
+
+
+<fieldset class="field checks">
+<legend>Text Effects</legend>
+<label><input type="checkbox" id="outline"> Outline</label>
+<label><input type="checkbox" id="shadow"> Drop Shadow</label>
+</fieldset>
+
+
+<div class="field col-span">
+<label for="contestUrl">Contest URL</label>
+<input id="contestUrl" type="url" placeholder="https://www.sparklight.com/internet" />
+</div>
+
+
+<div class="actions col-span">
+<button type="button" id="downloadBtn" class="btn primary">Download</button>
+<button type="reset" id="resetBtn" class="btn">Reset</button>
+</div>
+</form>
+
+
+<aside class="preview">
+<canvas id="flyerCanvas" width="3300" height="2550" aria-label="Flyer preview"></canvas>
+<div class="note">Preview is scaled for screen. Exports at full 300 DPI.</div>
+</aside>
+</section>
+</main>
+
+
+<!-- QRCode generator -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<!-- jsPDF UMD -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="flyer.js"></script>
 </body>
 </html>

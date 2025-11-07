@@ -1,123 +1,123 @@
-:root{
-  --bg:#051931;
-  --brand:#8d3b91;
-  --ink:#1f2230;
-  --card:#ffffff;
-  --ring:#dcdfe8;
-}
+// Event Flyer Builder – Clean Rebuild (300 DPI)
+// Output sizes at 300 DPI: Landscape 3300x2550, Portrait 2550x3300
 
-*{box-sizing:border-box}
 
-html,body{
-  margin:0;
-  padding:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-}
+(function () {
+const { jsPDF } = window.jspdf;
 
-.page{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
-}
 
-.card{
-  background:var(--card);
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.18);
-  margin-bottom:28px;
-  overflow:hidden;
-}
+// --- Constants ---
+const DPI = 300; // physical DPI
+const INCH = 300; // px per inch at 300 DPI
+const SIZES = {
+landscape: { W: 11 * DPI, H: 8.5 * DPI }, // 3300 x 2550
+portrait: { W: 8.5 * DPI, H: 11 * DPI }, // 2550 x 3300
+};
 
-.header-bar{
-  width:100%;
-  background:#120a1f;
-}
-.header-bar img{
-  display:block;
-  width:100%;
-  height:180px;
-  object-fit:cover;
-}
 
-.form{
-  padding:18px 20px 24px;
-}
+const PADDING = 0.5 * INCH; // 0.5" page padding
+const LOGO_MAX = { landscape: 0.55, portrait: 0.65 }; // percent of width
+const GAP = 0.18 * INCH; // spacing between blocks
+const LINE_HEIGHT = 1.22; // baseline line-height for headline block
 
-.cols{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:34px;               /* gutter between columns */
-}
 
-label{
-  display:block;
-  font-size:13px;
-  font-weight:600;
-  margin:12px 0 6px;
-}
+const QR_PX = 300; // 300x300 physical px QR (1" square)
 
-input[type="text"],
-select,
-textarea,
-input[type="file"]{
-  width:100%;
-  font-size:15px;
-  padding:10px 12px;
-  border:1px solid var(--ring);
-  border-radius:10px;
-  outline:none;
-}
-textarea{ min-height:110px; resize:vertical; }
 
-.effects{
-  display:flex;
-  gap:18px;
-  align-items:center;
-  margin-top:10px;
-}
+const FONT_STACK = '600 48px "Effra","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif';
+const FONT_BOLD = '700 48px "Effra","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif';
+const SMALL_FONT = '400 26px "Effra","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif';
 
-.orient{
-  display:flex;
-  gap:14px;
-  margin-top:8px;
-}
 
-.buttons{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-}
+// --- State ---
+const state = {
+orientation: 'landscape',
+W: SIZES.landscape.W,
+H: SIZES.landscape.H,
+bgImg: null,
+details: '',
+textColor: '#6E2F90',
+outline: false,
+shadow: false,
+url: 'https://www.sparklight.com/internet',
+};
 
-.btn{
-  background:var(--brand);
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  padding:10px 16px;
-  font-weight:700;
-  cursor:pointer;
-}
-.btn-ghost{
-  background:#e9e7ee;
-  color:#3a3550;
-}
 
-.preview-card{
-  padding:18px;
-}
-#flyerCanvas{
-  width:100%;
-  max-width:100%;
-  height:auto;
-  display:block;
-  background:#fff;
-  border-radius:12px;
-}
+// --- DOM ---
+const banner = document.getElementById('headerBanner');
+const form = document.getElementById('flyerForm');
+const eventNameEl = document.getElementById('eventName');
+const detailsEl = document.getElementById('details');
+const urlEl = document.getElementById('contestUrl');
+const colorEl = document.getElementById('textColor');
+const outlineEl = document.getElementById('outline');
+const shadowEl = document.getElementById('shadow');
+const formatEl = document.getElementById('format');
+const bgFileEl = document.getElementById('bgFile');
+const resetBtn = document.getElementById('resetBtn');
+const downloadBtn = document.getElementById('downloadBtn');
 
-/* Mobile */
-@media (max-width:760px){
-  .cols{ grid-template-columns:1fr; gap:18px; }
-  .header-bar img{ height:160px; }
+
+const canvas = document.getElementById('flyerCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+
+
+// --- Utility: mark as edited -> swap banner ---
+const markDirty = () => (banner.src = 'eventflyerbuilder-done.png');
+
+
+// Mobile label text tweak
+(function tweakMobileLabel() {
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+if (isMobile) {
+const label = document.getElementById('bgLabel');
+if (label) label.textContent = 'Choose File or Take a Photo';
 }
+})();
+
+
+// --- Image assets ---
+const logo = new Image();
+logo.src = 'sparklight-logo.png';
+
+
+// Read orientation radios
+form.elements['orientation'].forEach?.call(form.elements['orientation'], (el) => {
+el.addEventListener('change', (e) => {
+state.orientation = e.target.value;
+const { W, H } = SIZES[state.orientation];
+state.W = W; state.H = H;
+canvas.width = W; canvas.height = H;
+render();
+markDirty();
+});
+});
+
+
+// Field listeners
+[eventNameEl, detailsEl, urlEl, colorEl, outlineEl, shadowEl, formatEl].forEach((el) => {
+el.addEventListener('input', () => {
+state.details = detailsEl.value.trim();
+state.textColor = colorEl.value;
+state.outline = outlineEl.checked;
+state.shadow = shadowEl.checked;
+state.url = urlEl.value.trim() || 'https://www.sparklight.com/internet';
+render();
+markDirty();
+});
+});
+
+
+// Background upload
+bgFileEl.addEventListener('change', async (e) => {
+const file = e.target.files && e.target.files[0];
+if (!file) return;
+const img = new Image();
+img.crossOrigin = 'anonymous';
+img.onload = () => { state.bgImg = img; render(); markDirty(); };
+img.onerror = () => { state.bgImg = null; render(); markDirty(); };
+img.src = URL.createObjectURL(file);
+});
+})();

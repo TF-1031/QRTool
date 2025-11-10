@@ -1,0 +1,168 @@
+:root {
+  --brand: #8d3b91;
+  --bg-deep: #051931;           /* site background */
+  --card-bg: #ffffff;
+  --border-color: #dcdce5;
+  --radius: 10px;
+  --shadow: 0 3px 12px rgba(0,0,0,0.12);
+  --max-width: 900px;
+}
+
+/* Page */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-deep);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1f1f23;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Header (above the card, same width as card) */
+#topHeader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 10px;
+}
+#topHeader img {
+  width: 100%;
+  max-width: var(--max-width);
+  height: auto;
+  display: block;
+}
+
+/* Main container */
+#mainContainer {
+  width: 100%;
+  max-width: var(--max-width);
+  padding: 0 20px 40px;
+}
+
+/* Form card */
+form {
+  background: var(--card-bg);
+  padding: 28px 28px 36px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 30px;
+}
+
+/* Columns + gutter */
+.form-columns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0; /* we’ll use a visible gutter via borders/padding */
+}
+.left-column,
+.right-column {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* visible gutter: border on left column, spacing inside both */
+.left-column {
+  border-right: 1px solid var(--border-color);
+  padding-right: 24px;
+  margin-right: 24px;
+}
+.right-column {
+  padding-left: 24px;
+}
+
+/* Labels/inputs */
+label {
+  font-weight: 600;
+  margin-top: 6px;
+}
+input[type="text"],
+input[type="url"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fafafa;
+}
+textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+/* Effects row (Background Box removed) */
+.effects-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 14px;
+}
+.effects-row label { font-weight: 500; }
+
+/* Orientation radios (no label) */
+.orientation-toggle {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-top: 6px;
+}
+.orientation-toggle label { font-weight: 500; }
+
+/* Buttons */
+.buttons-row {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+.btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.btn:hover { filter: brightness(0.9); }
+
+/* Preview area */
+#preview-stage {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+#flyerCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive: remove the divider when stacked */
+@media (max-width: 700px) {
+  .left-column {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+  .right-column {
+    padding-left: 0;
+  }
+  .effects-row,
+  .orientation-toggle {
+    flex-wrap: wrap;
+  }
+}

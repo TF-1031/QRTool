@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Flyer Builder</title>
+
+  <link rel="stylesheet" href="flyer.css" />
+  <script type="module" src="flyer.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Header spans the card width but sits above it -->
+  <header id="topHeader">
+    <img src="eventflyerbuilder-logo.png" id="headerImage" alt="Flyer Builder Header" />
+  </header>
+
+  <!-- Main container (max 900px) -->
+  <div id="mainContainer">
+
+    <!-- FORM -->
+    <form id="flyerForm">
+      <div class="form-columns">
+
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+          <label>Event Name</label>
+          <input type="text" id="eventName" placeholder="e.g. Summer Bash" />
+
+          <label>Contest Entry Details</label>
+          <textarea id="contestDetails" placeholder="Win a $100 Gift Card!
+Visit Booth 22."></textarea>
+
+          <label>Text Color</label>
+          <select id="textColorSelect">
+            <option value="#A600A5">Bright Purple</option>
+            <option value="#2323A4">Purple</option>
+            <option value="#0061D2">Blue</option>
+            <option value="#00D3E7">Bright Blue</option>
+            <option value="#FF0007">Red</option>
+            <option value="#00BC00">Green</option>
+            <option value="#4FD300">Bright Green</option>
+            <option value="#FFD800">Yellow</option>
+            <option value="#3F4142">Gray</option>
+            <option value="#051931">Dark Blue</option>
+            <option value="#FFFFFF">White</option>
+            <option value="#000000">Black</option>
+          </select>
+
+          <!-- Text Effects (one row); Background Box removed -->
+          <div class="effects-row">
+            <label><input type="checkbox" id="effectOutline"> Outline</label>
+            <label><input type="checkbox" id="effectShadow"> Drop Shadow</label>
+          </div>
+
+          <label>Contest URL</label>
+          <input type="url" id="url" value="https://www.sparklight.com/internet" />
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-column">
+
+          <label>Download Format</label>
+          <select id="downloadFormat">
+            <option value="pdf">PDF</option>
+            <option value="jpg">JPG</option>
+          </select>
+
+          <!-- Orientation label removed; radios only -->
+          <div class="orientation-toggle">
+            <label><input type="radio" name="orientation" value="portrait"> Portrait</label>
+            <label><input type="radio" name="orientation" value="landscape" checked> Landscape</label>
+          </div>
+
+          <label>Background Image</label>
+          <input type="file" id="imageUpload" accept="image/*" />
+
+          <div class="buttons-row">
+            <button type="button" id="saveBtn" class="btn">Download</button>
+            <button type="button" id="resetBtn" class="btn">Reset</button>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+    <!-- PREVIEW -->
+    <div id="preview-stage">
+      <canvas id="flyerCanvas"></canvas>
+    </div>
+
+  </div>
+</body>
+</html>
